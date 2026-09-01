@@ -1,21 +1,194 @@
-variable "admin_cidr" {
-  description = "Публичный IPv4 администратора для SSH к bastion"
+variable "cloud_id" {
+  description = "Идентификатор облака Yandex Cloud."
   type        = string
 
   validation {
-    condition     = can(cidrhost(var.admin_cidr, 0))
-    error_message = "admin_cidr должен быть указан в формате IPv4 CIDR, например 95.84.198.105/32."
+    condition     = length(trimspace(var.cloud_id)) > 0
+    error_message = "Укажите cloud_id из команды: yc config get cloud-id."
+  }
+}
+
+variable "folder_id" {
+  description = "Идентификатор каталога Yandex Cloud."
+  type        = string
+
+  validation {
+    condition     = length(trimspace(var.folder_id)) > 0
+    error_message = "Укажите folder_id из команды: yc config get folder-id."
+  }
+}
+
+variable "default_zone" {
+  description = "Зона по умолчанию для ресурсов без явно указанной зоны."
+  type        = string
+  default     = "ru-central1-a"
+
+  validation {
+    condition     = contains(["ru-central1-a", "ru-central1-b", "ru-central1-d"], var.default_zone)
+    error_message = "default_zone должна быть ru-central1-a, ru-central1-b или ru-central1-d."
+  }
+}
+
+variable "project_name" {
+  description = "Короткое имя проекта, используемое в именах ресурсов."
+  type        = string
+  default     = "netology-diploma"
+
+  validation {
+    condition     = can(regex("^[a-z][a-z0-9-]{2,31}$", var.project_name))
+    error_message = "project_name: 3-32 символа, строчные латинские буквы, цифры и дефисы; первый символ — буква."
+  }
+}
+
+variable "environment" {
+  description = "Имя окружения для меток ресурсов."
+  type        = string
+  default     = "diploma"
+}
+
+variable "admin_cidr" {
+  description = "Публичный IPv4-адрес администратора в формате x.x.x.x/32 для доступа к bastion по SSH."
+  type        = string
+
+  validation {
+    condition     = can(cidrhost(var.admin_cidr, 0)) && can(regex("/32$", var.admin_cidr))
+    error_message = "admin_cidr должен быть корректным IPv4 CIDR с маской /32, например 203.0.113.10/32."
   }
 }
 
 variable "viewer_cidrs" {
-  description = "Адреса, которым разрешён доступ к Grafana и Kibana"
+  description = "CIDR-сети, которым разрешён доступ к Grafana и Kibana. Пустой список заменяется на admin_cidr."
   type        = list(string)
+  default     = []
 
   validation {
-    condition = alltrue([
-      for cidr in var.viewer_cidrs : can(cidrhost(cidr, 0))
-    ])
-    error_message = "Каждый адрес viewer_cidrs должен быть указан в формате CIDR."
+    condition     = alltrue([for cidr in var.viewer_cidrs : can(cidrhost(cidr, 0))])
+    error_message = "Каждый элемент viewer_cidrs должен быть корректной CIDR-сетью."
   }
+}
+
+variable "site_cidrs" {
+  description = "CIDR-сети, которым доступны HTTP/HTTPS listeners сайта."
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+
+  validation {
+    condition     = length(var.site_cidrs) > 0 && alltrue([for cidr in var.site_cidrs : can(cidrhost(cidr, 0))])
+    error_message = "site_cidrs должен содержать хотя бы одну корректную CIDR-сеть."
+  }
+}
+
+variable "ssh_user" {
+  description = "Linux-пользователь, создаваемый cloud-init."
+  type        = string
+  default     = "ubuntu"
+}
+
+variable "ssh_public_key_path" {
+  description = "Локальный путь к открытому SSH-ключу."
+  type        = string
+  default     = "~/.ssh/netology_diploma.pub"
+}
+
+variable "image_family" {
+  description = "Семейство образа ОС для ВМ."
+  type        = string
+  default     = "ubuntu-2404-lts"
+}
+
+variable "platform_id" {
+  description = "Платформа Compute Cloud для ВМ."
+  type        = string
+  default     = "standard-v3"
+}
+
+variable "preemptible" {
+  description = "Использовать прерываемые ВМ для экономии средств."
+  type        = bool
+  default     = true
+}
+
+variable "core_fraction" {
+  description = "Гарантированная доля производительности vCPU в процентах."
+  type        = number
+  default     = 20
+
+  validation {
+    condition     = contains([20, 50, 100], var.core_fraction)
+    error_message = "core_fraction должна быть 20, 50 или 100."
+  }
+}
+
+variable "public_a_cidr" {
+  description = "CIDR публичной подсети в зоне ru-central1-a."
+  type        = string
+  default     = "10.10.10.0/24"
+
+  validation {
+    condition     = can(cidrhost(var.public_a_cidr, 0))
+    error_message = "public_a_cidr должен быть корректной CIDR-сетью."
+  }
+}
+
+variable "public_d_cidr" {
+  description = "CIDR публичной подсети в зоне ru-central1-d."
+  type        = string
+  default     = "10.10.20.0/24"
+
+  validation {
+    condition     = can(cidrhost(var.public_d_cidr, 0))
+    error_message = "public_d_cidr должен быть корректной CIDR-сетью."
+  }
+}
+
+variable "private_a_cidr" {
+  description = "CIDR приватной подсети в зоне ru-central1-a."
+  type        = string
+  default     = "10.10.11.0/24"
+
+  validation {
+    condition     = can(cidrhost(var.private_a_cidr, 0))
+    error_message = "private_a_cidr должен быть корректной CIDR-сетью."
+  }
+}
+
+variable "private_d_cidr" {
+  description = "CIDR приватной подсети в зоне ru-central1-d."
+  type        = string
+  default     = "10.10.21.0/24"
+
+  validation {
+    condition     = can(cidrhost(var.private_d_cidr, 0))
+    error_message = "private_d_cidr должен быть корректной CIDR-сетью."
+  }
+}
+
+variable "git_repo_url" {
+  description = "HTTPS URL репозитория с сайтом и конфигурациями Ansible. Пустое значение отключает git pull в cloud-init."
+  type        = string
+  default     = ""
+}
+
+variable "git_revision" {
+  description = "Ветка или тег репозитория."
+  type        = string
+  default     = "main"
+}
+
+variable "domain_name" {
+  description = "Домен сайта без протокола. Оставьте пустым до настройки Cloud DNS."
+  type        = string
+  default     = ""
+}
+
+variable "dns_zone_id" {
+  description = "ID существующей публичной зоны Cloud DNS. Оставьте пустым, если зону будет создавать Terraform."
+  type        = string
+  default     = ""
+}
+
+variable "extra_labels" {
+  description = "Дополнительные метки для ресурсов."
+  type        = map(string)
+  default     = {}
 }
