@@ -1,0 +1,12 @@
+---
+- name: Configure dynamic web server
+  hosts: localhost
+  connection: local
+  become: true
+
+  roles:
+    - common
+    - nginx_site
+    - node_exporter
+    - nginxlog_exporter
+    - filebeat

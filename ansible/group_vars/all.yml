@@ -1,0 +1,15 @@
+---
+project_name: netology-diploma
+project_environment: diploma
+
+timezone: Europe/Moscow
+
+node_exporter_port: 9100
+nginxlog_exporter_port: 4040
+prometheus_port: 9090
+alertmanager_port: 9093
+grafana_port: 3000
+elasticsearch_port: 9200
+kibana_port: 5601
+postgresql_adapter_port: 9201
+postgresql_port: 6432

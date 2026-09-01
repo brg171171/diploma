@@ -1,0 +1,63 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+terraform.tfvars
+*.tfvars
+*.auto.tfvars
+*.auto.tfvars.json
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Terraform CLI
+.terraformrc
+terraform.rc
+
+# Secrets
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.token
+*.secret
+.env
+.env.*
+
+# Ansible
+ansible/group_vars/vault.yml
+*.retry
+
+# SSH
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+netology_diploma
+netology_diploma.pub
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Operating systems
+.DS_Store
+Thumbs.db
+
+# Evidence with secrets
+evidence/*secret*
+evidence/*token*
+evidence/*password*
+
+# Generated files
+*.log
+tmp/
+.cache/
