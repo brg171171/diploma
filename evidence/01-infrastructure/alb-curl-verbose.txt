@@ -1,0 +1,22 @@
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0*   Trying 158.160.215.131:80...
+* Connected to 158.160.215.131 (158.160.215.131) port 80
+> GET / HTTP/1.1
+> Host: 158.160.215.131
+> User-Agent: curl/8.5.0
+> Accept: */*
+> 
+< HTTP/1.1 200 OK
+< server: ycalb
+< date: Fri, 04 Sep 2026 16:06:48 GMT
+< content-type: text/html
+< content-length: 286
+< last-modified: Fri, 04 Sep 2026 14:00:25 GMT
+< etag: "6a9acef9-11e"
+< x-backend-host: web-2
+< accept-ranges: bytes
+< 
+{ [286 bytes data]
+100   286  100   286    0     0   1431      0 --:--:-- --:--:-- --:--:--  1437
+* Connection #0 to host 158.160.215.131 left intact

@@ -1,0 +1,68 @@
+alb_public_ip = "158.160.215.131"
+bastion_public_ip = "93.77.176.232"
+deployment_context = {
+  "cloud_id" = "b1g34uufe93vconvs6an"
+  "core_fraction" = 20
+  "default_zone" = "ru-central1-a"
+  "folder_id" = "b1gjei4h3oc3g28tejmt"
+  "preemptible" = true
+  "zones" = {
+    "a" = "ru-central1-a"
+    "d" = "ru-central1-d"
+  }
+}
+grafana_public_ip = "89.169.153.103"
+kibana_public_ip = "51.250.7.146"
+network_id = "enpj8k8guq8cp9m8p26m"
+network_plan = {
+  "private_a" = "10.10.11.0/24"
+  "private_d" = "10.10.21.0/24"
+  "public_a" = "10.10.10.0/24"
+  "public_d" = "10.10.20.0/24"
+}
+resource_name_prefix = "netology-diploma-diploma"
+security_group_ids = {
+  "alb" = "enpgkk14im1o4coqqek8"
+  "bastion" = "enp140slojmb1r5acpam"
+  "elasticsearch" = "enp2005leeqsu7ufuqhq"
+  "grafana" = "enp9or4iaomd81e7hjqt"
+  "kibana" = "enpj255nht9iklcfc3gs"
+  "postgresql" = "enp6g4ompvq4qbu47rpo"
+  "prometheus" = "enpcakgbnuvdqh3v8g7h"
+  "web" = "enp0vch2oa6uongdc22s"
+}
+service_boot_disk_ids = {
+  "bastion" = "fhmbru733pt1tsi0tqav"
+  "elasticsearch" = "fhmv8ci4jd86q6cov8i3"
+  "grafana" = "fhmlm9fgcke8l2aa06fa"
+  "kibana" = "fhmg7l2tuijvodoni380"
+  "prometheus" = "fhm9g7e90bjf07j1shm7"
+}
+service_instance_ids = {
+  "bastion" = "fhm0blntncf1alp7bc68"
+  "elasticsearch" = "fhmnvt95jukh4ktl6tqt"
+  "grafana" = "fhmdbaevmbfon0uqukbi"
+  "kibana" = "fhmqdd5b3rnddk5gt656"
+  "prometheus" = "fhmm2qetk1tj16isdnf8"
+}
+service_private_ips = {
+  "bastion" = "10.10.10.10"
+  "elasticsearch" = "10.10.11.30"
+  "grafana" = "10.10.10.20"
+  "kibana" = "10.10.10.30"
+  "prometheus" = "10.10.11.20"
+}
+site_url = "http://158.160.215.131"
+ssh_bastion_command = "ssh -i ~/.ssh/netology_diploma ubuntu@93.77.176.232"
+subnet_ids = {
+  "private_a" = "e9bd4ghvevlonjc2ufl7"
+  "private_d" = "fl8glvl58uu8baiat00q"
+  "public_a" = "e9bboni8ppoob870q8dp"
+  "public_d" = "fl85co2spivh49eg53ep"
+}
+web_instance_group_id = "cl1apcld615hgs1o2cg1"
+web_instance_private_ips = [
+  "10.10.11.13",
+  "10.10.21.17",
+]
+web_target_group_id = "ds7ubdmaahmbrlo2431l"

@@ -90,6 +90,12 @@ variable "ssh_public_key_path" {
   default     = "~/.ssh/netology_diploma.pub"
 }
 
+variable "ssh_private_key_path" {
+  description = "Локальный путь к закрытому SSH-ключу для формируемых команд подключения."
+  type        = string
+  default     = "~/.ssh/netology_diploma"
+}
+
 variable "image_family" {
   description = "Семейство образа ОС для ВМ."
   type        = string
@@ -116,6 +122,130 @@ variable "core_fraction" {
   validation {
     condition     = contains([20, 50, 100], var.core_fraction)
     error_message = "core_fraction должна быть 20, 50 или 100."
+  }
+}
+
+variable "timezone" {
+  description = "Часовой пояс гостевых ОС."
+  type        = string
+  default     = "Europe/Moscow"
+
+  validation {
+    condition     = length(trimspace(var.timezone)) > 0
+    error_message = "timezone не должна быть пустой."
+  }
+}
+
+variable "vm_resources" {
+  description = "Ресурсы пяти постоянных ВМ: vCPU, RAM и загрузочный диск."
+  type = map(object({
+    cores     = number
+    memory    = number
+    disk_size = number
+    disk_type = string
+  }))
+
+  default = {
+    bastion = {
+      cores     = 2
+      memory    = 1
+      disk_size = 10
+      disk_type = "network-hdd"
+    }
+    prometheus = {
+      cores     = 2
+      memory    = 2
+      disk_size = 20
+      disk_type = "network-hdd"
+    }
+    grafana = {
+      cores     = 2
+      memory    = 2
+      disk_size = 10
+      disk_type = "network-hdd"
+    }
+    elasticsearch = {
+      cores     = 2
+      memory    = 4
+      disk_size = 20
+      disk_type = "network-hdd"
+    }
+    kibana = {
+      cores     = 2
+      memory    = 2
+      disk_size = 10
+      disk_type = "network-hdd"
+    }
+  }
+
+  validation {
+    condition = alltrue([
+      for name in ["bastion", "prometheus", "grafana", "elasticsearch", "kibana"] :
+      contains(keys(var.vm_resources), name)
+    ])
+    error_message = "vm_resources должен содержать bastion, prometheus, grafana, elasticsearch и kibana."
+  }
+
+  validation {
+    condition = alltrue([
+      for config in values(var.vm_resources) :
+      config.cores >= 2 &&
+      config.memory >= 1 &&
+      config.disk_size >= 10 &&
+      contains(["network-hdd", "network-ssd"], config.disk_type)
+    ])
+    error_message = "Для каждой ВМ: cores >= 2, memory >= 1 ГБ, disk_size >= 10 ГБ, disk_type network-hdd или network-ssd."
+  }
+
+  validation {
+    condition     = try(var.vm_resources["elasticsearch"].memory >= 4, false)
+    error_message = "Для Elasticsearch требуется не менее 4 ГБ RAM."
+  }
+}
+
+variable "web_vm_resources" {
+  description = "Ресурсы одного web-сервера в управляемой Instance Group."
+  type = object({
+    cores     = number
+    memory    = number
+    disk_size = number
+    disk_type = string
+  })
+
+  default = {
+    cores     = 2
+    memory    = 2
+    disk_size = 10
+    disk_type = "network-hdd"
+  }
+
+  validation {
+    condition = (
+      var.web_vm_resources.cores >= 2 &&
+      var.web_vm_resources.memory >= 1 &&
+      var.web_vm_resources.disk_size >= 10 &&
+      contains(["network-hdd", "network-ssd"], var.web_vm_resources.disk_type)
+    )
+    error_message = "Web VM: cores >= 2, memory >= 1 ГБ, disk_size >= 10 ГБ, тип network-hdd или network-ssd."
+  }
+}
+
+variable "static_public_ip_roles" {
+  description = "Публичные ВМ, которым нужно резервировать статический IPv4. Пустой список использует динамические адреса."
+  type        = set(string)
+  default     = []
+
+  validation {
+    condition = alltrue([
+      for role in var.static_public_ip_roles :
+      contains(["bastion", "grafana", "kibana"], role)
+    ])
+    error_message = "Статический адрес можно включить только для bastion, grafana или kibana."
+  }
+
+  validation {
+    condition     = length(var.static_public_ip_roles) <= 2
+    error_message = "В конфигурации разрешено резервировать не более двух статических публичных IPv4."
   }
 }
 

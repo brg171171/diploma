@@ -1,0 +1,90 @@
+# Получить значения:
+#   yc config get cloud-id
+#   yc config get folder-id
+cloud_id  = "b1g34uufe93vconvs6an"
+folder_id = "b1gjei4h3oc3g28tejmt"
+
+# Перед каждым развёртыванием проверьте актуальный адрес:
+#   curl -4 https://ifconfig.me
+admin_cidr = "109.120.141.8/32"
+
+# Для учебного стенда обычно достаточно того же адреса администратора.
+viewer_cidrs = [
+  "109.120.141.8/32",
+]
+
+# Публичный сайт доступен из интернета. На время настройки можно заменить
+# на ["203.0.113.10/32"].
+site_cidrs = ["0.0.0.0/0"]
+
+default_zone         = "ru-central1-a"
+project_name         = "netology-diploma"
+environment          = "diploma"
+ssh_user             = "ubuntu"
+ssh_public_key_path  = "~/.ssh/netology_diploma.pub"
+ssh_private_key_path = "~/.ssh/netology_diploma"
+
+image_family  = "ubuntu-2404-lts"
+platform_id   = "standard-v3"
+preemptible   = true
+core_fraction = 20
+timezone      = "Europe/Moscow"
+
+# По умолчанию публичные ВМ получают динамические IPv4 и не расходуют квоту
+# vpc.externalStaticAddresses.count. Если квота свободна, можно указать:
+# static_public_ip_roles = ["bastion"]
+static_public_ip_roles = []
+
+# Elasticsearch не уменьшайте ниже 4 ГБ RAM. Для более долгого хранения
+# метрик и логов увеличьте disk_size у Prometheus и Elasticsearch.
+vm_resources = {
+  bastion = {
+    cores     = 2
+    memory    = 1
+    disk_size = 10
+    disk_type = "network-hdd"
+  }
+  prometheus = {
+    cores     = 2
+    memory    = 2
+    disk_size = 20
+    disk_type = "network-hdd"
+  }
+  grafana = {
+    cores     = 2
+    memory    = 2
+    disk_size = 10
+    disk_type = "network-hdd"
+  }
+  elasticsearch = {
+    cores     = 2
+    memory    = 4
+    disk_size = 20
+    disk_type = "network-hdd"
+  }
+  kibana = {
+    cores     = 2
+    memory    = 2
+    disk_size = 10
+    disk_type = "network-hdd"
+  }
+}
+
+public_a_cidr  = "10.10.10.0/24"
+public_d_cidr  = "10.10.20.0/24"
+private_a_cidr = "10.10.11.0/24"
+private_d_cidr = "10.10.21.0/24"
+
+# Укажите после создания репозитория. Для приватного репозитория потребуется
+# отдельный deploy key или другой способ доставки конфигурации на ВМ.
+git_repo_url = "https://github.com/brg171171/diploma.git"
+git_revision = "main"
+
+# Заполняются на этапе Cloud DNS и Certificate Manager.
+domain_name = ""
+dns_zone_id = ""
+
+extra_labels = {
+  owner  = "student"
+  course = "netology"
+}

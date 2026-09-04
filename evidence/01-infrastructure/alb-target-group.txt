@@ -1,0 +1,18 @@
+id: ds7ubdmaahmbrlo2431l
+name: netology-diploma-diploma-web-tg
+description: Managed targets of the web Instance Group
+folder_id: b1gjei4h3oc3g28tejmt
+labels:
+  course: netology
+  environment: diploma
+  managed-by: terraform
+  owner: student
+  project: netology-diploma
+  role: web
+targets:
+  - ip_address: 10.10.21.17
+    subnet_id: fl8glvl58uu8baiat00q
+  - ip_address: 10.10.11.13
+    subnet_id: e9bd4ghvevlonjc2ufl7
+created_at: "2026-09-04T13:59:21.374349707Z"
+

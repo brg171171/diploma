@@ -1,6 +1,5 @@
 #cloud-config
 preserve_hostname: false
-hostname: ${hostname_yaml}
 manage_etc_hosts: true
 timezone: ${timezone_yaml}
 
@@ -26,17 +25,10 @@ packages:
   - curl
   - git
   - jq
+  - nginx
   - python3
   - python3-apt
   - unzip
-
-growpart:
-  mode: auto
-  devices:
-    - "/"
-  ignore_growroot_disabled: false
-
-resize_rootfs: true
 
 write_files:
   - path: /etc/diploma/instance.yml
@@ -44,9 +36,25 @@ write_files:
     permissions: "0644"
     content: |
       project: ${project_name_yaml}
-      role: ${role_yaml}
-      hostname: ${hostname_yaml}
+      role: web
       provisioner: cloud-init
+
+  - path: /var/www/html/index.html
+    owner: root:www-data
+    permissions: "0644"
+    content: |
+      <!doctype html>
+      <html lang="ru">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width,initial-scale=1">
+          <title>Netology Diploma</title>
+        </head>
+        <body>
+          <h1>Web server is ready</h1>
+          <p>Project: ${project_name_yaml}</p>
+        </body>
+      </html>
 
   - path: /etc/ssh/sshd_config.d/99-diploma-hardening.conf
     owner: root:root
@@ -60,7 +68,9 @@ write_files:
       AllowTcpForwarding yes
 
 runcmd:
+  - [nginx, -t]
+  - [systemctl, enable, --now, nginx]
   - [systemctl, reload, ssh]
   - [cloud-init-per, once, diploma-ready, touch, /var/lib/diploma-cloud-init-ready]
 
-final_message: ${final_message_yaml}
+final_message: "Cloud-init completed for web instance"
