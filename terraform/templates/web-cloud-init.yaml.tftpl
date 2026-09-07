@@ -21,6 +21,7 @@ ssh_pwauth: false
 package_update: true
 package_upgrade: false
 packages:
+  - ansible
   - ca-certificates
   - curl
   - git
@@ -28,6 +29,7 @@ packages:
   - nginx
   - python3
   - python3-apt
+  - rsync
   - unzip
 
 write_files:
@@ -67,10 +69,81 @@ write_files:
       X11Forwarding no
       AllowTcpForwarding yes
 
+  - path: /usr/local/sbin/diploma-ansible-pull
+    owner: root:root
+    permissions: "0750"
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+
+      REPO_URL=${git_repo_url_shell}
+      REVISION=${git_revision_shell}
+      REPO_DIR="/opt/diploma"
+
+      if [[ -z "$REPO_URL" ]]; then
+        echo "git_repo_url is empty" >&2
+        exit 2
+      fi
+
+      export HOME="/root"
+      export ANSIBLE_CONFIG="$REPO_DIR/ansible/ansible.cfg"
+      export ANSIBLE_ROLES_PATH="$REPO_DIR/ansible/roles"
+      export ANSIBLE_LOCAL_TEMP="/tmp/ansible-local"
+
+      mkdir -p "$ANSIBLE_LOCAL_TEMP"
+
+      exec /usr/bin/ansible-pull \
+        --url "$REPO_URL" \
+        --checkout "$REVISION" \
+        --directory "$REPO_DIR" \
+        --inventory "localhost," \
+        ansible/playbooks/web-pull.yml
+
+  - path: /etc/systemd/system/diploma-ansible-pull.service
+    owner: root:root
+    permissions: "0644"
+    content: |
+      [Unit]
+      Description=Configure diploma web server using ansible-pull
+      Wants=network-online.target
+      After=network-online.target
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/local/sbin/diploma-ansible-pull
+      StandardOutput=journal
+      StandardError=journal
+
+      [Install]
+      WantedBy=multi-user.target
+
+  - path: /etc/systemd/system/diploma-ansible-pull.timer
+    owner: root:root
+    permissions: "0644"
+    content: |
+      [Unit]
+      Description=Periodically update diploma web server configuration
+
+      [Timer]
+      OnBootSec=10min
+      OnUnitActiveSec=30min
+      RandomizedDelaySec=60
+      Persistent=true
+      Unit=diploma-ansible-pull.service
+
+      [Install]
+      WantedBy=timers.target
+
 runcmd:
   - [nginx, -t]
   - [systemctl, enable, --now, nginx]
+  - [ansible-galaxy, collection, install, ansible.posix, community.general]
+  - [systemctl, daemon-reload]
+  - [systemctl, enable, --now, diploma-ansible-pull.timer]
+  - [systemctl, start, diploma-ansible-pull.service]
   - [systemctl, reload, ssh]
   - [cloud-init-per, once, diploma-ready, touch, /var/lib/diploma-cloud-init-ready]
+  - [cloud-init-per, once, diploma-ready, touch, /var/lib/cloud/diploma-ready]
+
 
 final_message: "Cloud-init completed for web instance"

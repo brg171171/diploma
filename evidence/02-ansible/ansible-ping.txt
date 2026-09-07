@@ -1,0 +1,24 @@
+grafana | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}
+elasticsearch | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}
+web-2 | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}
+web-1 | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}
+prometheus | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}
+kibana | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}

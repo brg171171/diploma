@@ -1,0 +1,12 @@
+grafana | CHANGED | rc=0 >>
+uid=0(root) gid=0(root) groups=0(root)
+web-2 | CHANGED | rc=0 >>
+uid=0(root) gid=0(root) groups=0(root)
+web-1 | CHANGED | rc=0 >>
+uid=0(root) gid=0(root) groups=0(root)
+prometheus | CHANGED | rc=0 >>
+uid=0(root) gid=0(root) groups=0(root)
+elasticsearch | CHANGED | rc=0 >>
+uid=0(root) gid=0(root) groups=0(root)
+kibana | CHANGED | rc=0 >>
+uid=0(root) gid=0(root) groups=0(root)

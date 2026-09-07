@@ -88,6 +88,11 @@ variable "ssh_public_key_path" {
   description = "Локальный путь к открытому SSH-ключу."
   type        = string
   default     = "~/.ssh/netology_diploma.pub"
+
+  validation {
+    condition     = can(regex("\\.pub$", var.ssh_public_key_path))
+    error_message = "ssh_public_key_path must point to a public key file ending with .pub."
+  }
 }
 
 variable "ssh_private_key_path" {
@@ -294,9 +299,13 @@ variable "private_d_cidr" {
 }
 
 variable "git_repo_url" {
-  description = "HTTPS URL репозитория с сайтом и конфигурациями Ansible. Пустое значение отключает git pull в cloud-init."
+  description = "Public Git repository used by ansible-pull"
   type        = string
-  default     = ""
+
+  validation {
+    condition     = can(regex("^https://github\\.com/.+\\.git$", var.git_repo_url))
+    error_message = "git_repo_url must be a public GitHub HTTPS repository ending with .git"
+  }
 }
 
 variable "git_revision" {

@@ -7,3 +7,10 @@
   roles:
     - common
 
+- name: Configure web servers
+  hosts: web
+  become: true
+  gather_facts: true
+
+  roles:
+    - nginx_site

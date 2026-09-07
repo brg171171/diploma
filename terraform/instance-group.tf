@@ -67,10 +67,13 @@ resource "yandex_compute_instance_group" "web" {
 
     metadata = {
       user-data = templatefile("${path.module}/templates/web-cloud-init.yaml.tftpl", {
+        ssh_public_key      = trimspace(file(pathexpand(var.ssh_public_key_path)))
         project_name_yaml   = jsonencode(var.project_name)
         ssh_public_key_yaml = jsonencode(local.ssh_public_key)
         ssh_user_yaml       = jsonencode(var.ssh_user)
         timezone_yaml       = jsonencode(var.timezone)
+        git_repo_url_shell  = jsonencode(var.git_repo_url)
+        git_revision_shell  = jsonencode(var.git_revision)
       })
     }
 
