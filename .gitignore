@@ -1,5 +1,6 @@
 # Terraform
 .terraform/
+**/.terraform/*
 *.tfstate
 *.tfstate.*
 *.tfplan
@@ -13,12 +14,19 @@ override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
+.terraform.lock.hcl.backup
 
 # Terraform CLI
 .terraformrc
 terraform.rc
 
-# Secrets
+# Variables and secrets
+terraform/terraform.tfvars
+*.auto.tfvars
+ansible/inventory/hosts.yml
+ansible/inventory/yc.yml
+ansible/inventory/group_vars/vault.yml
+*.vault
 *.pem
 *.key
 *.p12
@@ -30,7 +38,7 @@ terraform.rc
 .env.*
 
 # Ansible
-ansible/group_vars/vault.yml
+.ansible/
 *.retry
 
 # SSH
@@ -53,6 +61,8 @@ netology_diploma.pub
 Thumbs.db
 
 # Evidence with secrets
+evidence/*.log
+evidence/*.txt
 evidence/*secret*
 evidence/*token*
 evidence/*password*

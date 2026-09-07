@@ -1,12 +1,59 @@
 ---
-- name: Configure dynamic web server
+- name: Configure web server using ansible-pull
   hosts: localhost
   connection: local
   become: true
+  gather_facts: true
+
+  vars_files:
+    - "{{ playbook_dir }}/../inventory/group_vars/all.yml"
+
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+    diploma_repository_path: /opt/diploma
+
+  pre_tasks:
+    - name: Check supported operating system
+      ansible.builtin.assert:
+        that:
+          - ansible_os_family == "Debian"
+        fail_msg: >-
+          This playbook supports Debian and Ubuntu systems only.
+          Detected OS family: {{ ansible_os_family }}
+        success_msg: "Supported Debian-based operating system detected"
 
   roles:
-    - common
-    - nginx_site
-    - node_exporter
-    - nginxlog_exporter
-    - filebeat
+    - role: common
+    - role: nginx_site
+
+    # Раскомментируйте после заполнения соответствующих ролей:
+    # - role: node_exporter
+    # - role: nginxlog_exporter
+    # - role: filebeat
+
+  post_tasks:
+    - name: Read deployed Git revision
+      ansible.builtin.command:
+        cmd: git -C "{{ diploma_repository_path }}" rev-parse HEAD
+      register: diploma_git_revision
+      changed_when: false
+
+    - name: Create deployment information directory
+      ansible.builtin.file:
+        path: /var/lib/diploma
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Save successful deployment information
+      ansible.builtin.copy:
+        dest: /var/lib/diploma/ansible-pull-success
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          status=success
+          revision={{ diploma_git_revision.stdout }}
+          host={{ ansible_hostname }}
+          date={{ ansible_date_time.iso8601 }}

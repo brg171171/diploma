@@ -1,0 +1,176 @@
+:root {
+  color-scheme: dark;
+  --font-display: "Cabinet Grotesk", "Trebuchet MS", sans-serif;
+  --font-body: "Satoshi", "Segoe UI", sans-serif;
+  --bg: #020608;
+  --surface: #071116;
+  --surface-strong: #0d2028;
+  --ink: #e8fbff;
+  --muted: #83a5ae;
+  --line: rgba(71, 228, 255, 0.14);
+  --line-strong: rgba(71, 228, 255, 0.34);
+  --primary: #00d8ff;
+  --primary-bright: #75efff;
+  --primary-soft: #073846;
+  --navy: #010508;
+  --orange: #ff4f81;
+  --inverse: #eafcff;
+  --shadow: 0 24px 80px rgba(0, 0, 0, 0.48);
+  --radius-s: 0.55rem;
+  --radius-m: 1rem;
+  --radius-l: 1.5rem;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  --space-9: 6rem;
+  --space-10: 8rem;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background: var(--bg);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  background-image:
+    linear-gradient(rgba(28, 123, 140, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(28, 123, 140, 0.035) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+.cyber-noise {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  opacity: 0.025;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.7'/%3E%3C/svg%3E");
+  mix-blend-mode: screen;
+}
+
+img { display: block; max-width: 100%; }
+a { color: inherit; }
+button, input, textarea, select { font: inherit; }
+button { color: inherit; }
+
+h1, h2, h3, p { margin-top: 0; }
+h1, h2, h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.035em;
+  line-height: 1.02;
+}
+
+h2 {
+  margin-bottom: 0;
+  font-size: clamp(2.55rem, 6vw, 5.8rem);
+  font-weight: 700;
+}
+
+h3 { font-size: clamp(1.35rem, 2.2vw, 2rem); }
+
+.shell {
+  width: min(100% - 2rem, 82rem);
+  margin-inline: auto;
+}
+
+.section { padding-block: clamp(5.5rem, 10vw, 10rem); }
+
+.skip-link {
+  position: fixed;
+  z-index: 1000;
+  top: 0;
+  left: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--ink);
+  color: var(--bg);
+  transform: translateY(-120%);
+  transition: transform 180ms ease;
+}
+
+.skip-link:focus { transform: translateY(0); }
+
+:focus-visible {
+  outline: 3px solid var(--orange);
+  outline-offset: 4px;
+}
+
+.eyebrow {
+  margin-bottom: var(--space-5);
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.eyebrow::before {
+  display: inline-block;
+  width: 1.35rem;
+  height: 1px;
+  margin-right: 0.65rem;
+  background: currentColor;
+  content: "";
+  vertical-align: middle;
+}
+
+.button {
+  display: inline-flex;
+  min-height: 3.25rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.25rem;
+  border: 1px solid var(--primary);
+  border-radius: 0.2rem;
+  background: var(--primary);
+  color: #001015;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 240ms var(--ease), background 240ms ease, color 240ms ease;
+  clip-path: polygon(0.6rem 0, 100% 0, 100% calc(100% - 0.6rem), calc(100% - 0.6rem) 100%, 0 100%, 0 0.6rem);
+}
+
+.button:hover {
+  background: var(--primary-bright);
+  box-shadow: 0 0 0 1px var(--primary-bright), 0 0 28px color-mix(in srgb, var(--primary) 34%, transparent);
+  transform: translateY(-2px);
+}
+.button-small { min-height: 2.65rem; padding-inline: 1rem; font-size: 0.875rem; }
+
+.reveal {
+  opacity: 0;
+  filter: blur(8px);
+  transform: translateY(16px);
+  transition: opacity 700ms var(--ease), filter 700ms var(--ease), transform 700ms var(--ease);
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  filter: blur(0);
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .reveal { opacity: 1; }
+  .reveal { filter: none; transform: none; }
+  .cyber-noise { display: none; }
+}
