@@ -1,0 +1,16 @@
+---
+project_name: netology-diploma
+system_timezone: Europe/Moscow
+
+common_packages:
+  - ca-certificates
+  - curl
+  - git
+  - gnupg
+  - jq
+  - unzip
+  - python3
+  - python3-apt
+
+node_exporter_port: 9100
+nginxlog_exporter_port: 4040

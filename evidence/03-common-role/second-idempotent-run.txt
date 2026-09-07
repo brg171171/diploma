@@ -1,0 +1,75 @@
+
+PLAY [Apply common configuration] **********************************************
+
+TASK [Gathering Facts] *********************************************************
+Monday 07 September 2026  20:01:34 +0300 (0:00:00.013)       0:00:00.013 ****** 
+ok: [web-1]
+ok: [grafana]
+ok: [kibana]
+ok: [web-2]
+ok: [elasticsearch]
+ok: [prometheus]
+
+TASK [common : Update APT cache] ***********************************************
+Monday 07 September 2026  20:01:40 +0300 (0:00:06.117)       0:00:06.131 ****** 
+ok: [web-2]
+ok: [kibana]
+ok: [web-1]
+ok: [grafana]
+ok: [elasticsearch]
+ok: [prometheus]
+
+TASK [common : Install common packages] ****************************************
+Monday 07 September 2026  20:01:43 +0300 (0:00:02.971)       0:00:09.103 ****** 
+ok: [web-1]
+ok: [grafana]
+ok: [kibana]
+ok: [elasticsearch]
+ok: [web-2]
+ok: [prometheus]
+
+TASK [common : Configure timezone] *********************************************
+Monday 07 September 2026  20:01:46 +0300 (0:00:02.130)       0:00:11.234 ****** 
+ok: [elasticsearch]
+ok: [web-2]
+ok: [web-1]
+ok: [grafana]
+ok: [kibana]
+ok: [prometheus]
+
+TASK [common : Create diploma configuration directory] *************************
+Monday 07 September 2026  20:01:49 +0300 (0:00:03.238)       0:00:14.472 ****** 
+ok: [web-1]
+ok: [elasticsearch]
+ok: [web-2]
+ok: [kibana]
+ok: [grafana]
+ok: [prometheus]
+
+TASK [common : Write Ansible management marker] ********************************
+Monday 07 September 2026  20:01:51 +0300 (0:00:01.811)       0:00:16.284 ****** 
+ok: [web-1]
+ok: [web-2]
+ok: [elasticsearch]
+ok: [kibana]
+ok: [grafana]
+ok: [prometheus]
+
+PLAY RECAP *********************************************************************
+elasticsearch              : ok=6    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+grafana                    : ok=6    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+kibana                     : ok=6    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+prometheus                 : ok=6    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+web-1                      : ok=6    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+web-2                      : ok=6    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+
+
+TASKS RECAP ********************************************************************
+Monday 07 September 2026  20:01:55 +0300 (0:00:04.079)       0:00:20.363 ****** 
+=============================================================================== 
+Gathering Facts --------------------------------------------------------- 6.12s
+common : Write Ansible management marker -------------------------------- 4.08s
+common : Configure timezone --------------------------------------------- 3.24s
+common : Update APT cache ----------------------------------------------- 2.97s
+common : Install common packages ---------------------------------------- 2.13s
+common : Create diploma configuration directory ------------------------- 1.81s

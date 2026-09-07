@@ -1,39 +1,9 @@
 ---
-- name: Configure common settings
+- name: Apply common configuration
   hosts: all
   become: true
+  gather_facts: true
+
   roles:
     - common
-    - node_exporter
 
-- name: Configure Elasticsearch
-  hosts: elasticsearch
-  become: true
-  roles:
-    - elasticsearch
-
-- name: Configure monitoring
-  hosts: prometheus
-  become: true
-  roles:
-    - prometheus
-    - alertmanager
-    - postgresql_adapter
-
-- name: Configure Grafana
-  hosts: grafana
-  become: true
-  roles:
-    - grafana
-
-- name: Configure Kibana
-  hosts: kibana
-  become: true
-  roles:
-    - kibana
-
-- name: Configure Filebeat
-  hosts: all
-  become: true
-  roles:
-    - filebeat

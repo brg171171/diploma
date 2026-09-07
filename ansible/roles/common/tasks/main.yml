@@ -1,1 +1,33 @@
 ---
+- name: Update APT cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install common packages
+  ansible.builtin.apt:
+    name: "{{ common_packages }}"
+    state: present
+
+- name: Configure timezone
+  community.general.timezone:
+    name: "{{ system_timezone }}"
+
+- name: Create diploma configuration directory
+  ansible.builtin.file:
+    path: /etc/diploma
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Write Ansible management marker
+  ansible.builtin.copy:
+    dest: /etc/diploma/ansible-managed
+    content: |
+      project={{ project_name }}
+      managed_by=ansible
+      inventory_hostname={{ inventory_hostname }}
+    owner: root
+    group: root
+    mode: "0644"
