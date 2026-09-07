@@ -331,3 +331,20 @@ variable "extra_labels" {
   type        = map(string)
   default     = {}
 }
+
+variable "ubuntu_image_id" {
+  description = "Pinned Ubuntu image ID used by Compute instances"
+  type        = string
+
+  validation {
+    condition     = can(regex("^fd[0-9a-z]+$", var.ubuntu_image_id))
+    error_message = "ubuntu_image_id must be a valid Yandex Cloud image ID."
+  }
+}
+
+variable "web_config_version" {
+  description = "Version marker that triggers a rolling update of the web instance group"
+  type        = string
+  default     = "ansible-pull-v1"
+}
+

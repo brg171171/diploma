@@ -49,7 +49,7 @@ resource "yandex_compute_instance_group" "web" {
       mode = "READ_WRITE"
 
       initialize_params {
-        image_id = data.yandex_compute_image.ubuntu.id
+        image_id = var.ubuntu_image_id
         size     = var.web_vm_resources.disk_size
         type     = var.web_vm_resources.disk_type
       }
@@ -66,6 +66,8 @@ resource "yandex_compute_instance_group" "web" {
     }
 
     metadata = {
+      "config-version" = var.web_config_version
+
       user-data = templatefile("${path.module}/templates/web-cloud-init.yaml.tftpl", {
         ssh_public_key      = trimspace(file(pathexpand(var.ssh_public_key_path)))
         project_name_yaml   = jsonencode(var.project_name)

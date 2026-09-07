@@ -1,7 +1,3 @@
-data "yandex_compute_image" "ubuntu" {
-  family = var.image_family
-}
-
 # Prometheus будет получать список динамических web-узлов Instance Group
 # через YC API. Других ролей этому service account не требуется.
 resource "yandex_iam_service_account" "prometheus_discovery" {
@@ -118,7 +114,7 @@ resource "yandex_compute_instance" "service" {
     initialize_params {
       name        = "${local.name_prefix}-${each.key}-boot"
       description = "Boot disk for ${each.value.hostname}"
-      image_id    = data.yandex_compute_image.ubuntu.id
+      image_id    = var.ubuntu_image_id
       size        = var.vm_resources[each.key].disk_size
       type        = var.vm_resources[each.key].disk_type
     }
