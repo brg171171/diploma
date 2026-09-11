@@ -3,5 +3,5 @@ nginx_site_name: diploma
 nginx_site_root: /var/www/diploma
 nginx_listen_port: 80
 nginx_server_name: "_"
-nginx_access_log: /var/log/nginx/diploma_access.log
+nginx_access_log: /var/log/nginx/access.log
 nginx_error_log: /var/log/nginx/diploma_error.log
