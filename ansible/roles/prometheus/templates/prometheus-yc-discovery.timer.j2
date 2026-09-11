@@ -1,0 +1,12 @@
+[Unit]
+Description=Periodically update Prometheus Yandex Cloud targets
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec={{ prometheus_discovery_interval }}
+RandomizedDelaySec=10s
+Persistent=true
+Unit=prometheus-yc-discovery.service
+
+[Install]
+WantedBy=timers.target

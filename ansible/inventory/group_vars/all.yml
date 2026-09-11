@@ -14,3 +14,5 @@ common_packages:
 
 node_exporter_port: 9100
 nginxlog_exporter_port: 4040
+prometheus_web_instance_group_id: "cl1apcld615hgs1o2cg1"
+prometheus_yc_folder_id: "b1gjei4h3oc3g28tejmt"

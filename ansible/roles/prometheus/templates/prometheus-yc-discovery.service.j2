@@ -1,0 +1,10 @@
+[Unit]
+Description=Update Prometheus targets from Yandex Instance Group
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+ExecStart=/usr/local/sbin/update-prometheus-targets

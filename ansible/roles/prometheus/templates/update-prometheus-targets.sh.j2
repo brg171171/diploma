@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+METADATA_TOKEN_URL="http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token"
+INSTANCE_GROUP_ID="{{ prometheus_web_instance_group_id }}"
+API_URL="https://compute.api.cloud.yandex.net/compute/v1/instanceGroups/${INSTANCE_GROUP_ID}/instances?pageSize=1000"
+FILE_SD_DIR="{{ prometheus_file_sd_dir }}"
+
+mkdir -p "$FILE_SD_DIR"
+
+IAM_TOKEN="$(
+  curl \
+    --silent \
+    --show-error \
+    --fail \
+    --retry 3 \
+    --retry-delay 2 \
+    --header "Metadata-Flavor: Google" \
+    "$METADATA_TOKEN_URL" |
+  jq -er '.access_token'
+)"
+
+INSTANCES_JSON="$(
+  curl \
+    --silent \
+    --show-error \
+    --fail \
+    --retry 3 \
+    --retry-delay 2 \
+    --header "Authorization: Bearer ${IAM_TOKEN}" \
+    "$API_URL"
+)"
+
+write_targets() {
+  local port="$1"
+  local output_file="$2"
+  local temporary_file
+
+  temporary_file="$(mktemp "${FILE_SD_DIR}/.targets.XXXXXX")"
+
+  jq \
+    --arg port "$port" \
+    '
+    [
+      .instances[]
+      | select(.status == "RUNNING_ACTUAL")
+      | select(.networkInterfaces[0].primaryV4Address.address != null)
+      | {
+          targets: [
+            (.networkInterfaces[0].primaryV4Address.address + ":" + $port)
+          ],
+          labels: {
+            instance: .name,
+            zone: .zoneId,
+            yc_instance_id: .id,
+            source: "yandex-instance-group"
+          }
+        }
+    ]
+    ' <<< "$INSTANCES_JSON" > "$temporary_file"
+
+  jq -e . "$temporary_file" >/dev/null
+  chmod 0644 "$temporary_file"
+  mv -f "$temporary_file" "${FILE_SD_DIR}/${output_file}"
+}
+
+write_targets \
+  "{{ prometheus_node_exporter_port }}" \
+  "node-exporter.json"
+
+write_targets \
+  "{{ prometheus_nginxlog_exporter_port }}" \
+  "nginxlog-exporter.json"

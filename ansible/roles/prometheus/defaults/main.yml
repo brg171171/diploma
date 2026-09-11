@@ -1,1 +1,25 @@
 ---
+prometheus_version: "3.13.3"
+prometheus_arch: "amd64"
+
+prometheus_archive: >-
+  prometheus-{{ prometheus_version }}.linux-{{ prometheus_arch }}.tar.gz
+
+prometheus_download_url: >-
+  https://github.com/prometheus/prometheus/releases/download/v{{ prometheus_version }}/{{ prometheus_archive }}
+
+prometheus_user: prometheus
+prometheus_group: prometheus
+
+prometheus_config_dir: /etc/prometheus
+prometheus_data_dir: /var/lib/prometheus
+prometheus_file_sd_dir: /etc/prometheus/file_sd
+
+prometheus_listen_address: "0.0.0.0:9090"
+prometheus_scrape_interval: 15s
+prometheus_evaluation_interval: 15s
+prometheus_retention_time: 15d
+
+prometheus_discovery_interval: 1min
+prometheus_node_exporter_port: 9100
+prometheus_nginxlog_exporter_port: 4040
