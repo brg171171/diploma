@@ -1,0 +1,9 @@
+grafana | CHANGED | rc=0 >>
+grafana	13.2.1
+enabled
+active
+{
+  "database": "ok",
+  "version": "13.2.1",
+  "commit": "56cd3e9288d8255fecebe5d05b48d191f50674b5"
+}

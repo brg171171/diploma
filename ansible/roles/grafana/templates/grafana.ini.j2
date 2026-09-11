@@ -1,0 +1,36 @@
+[server]
+protocol = http
+http_addr = {{ grafana_http_addr }}
+http_port = {{ grafana_http_port }}
+{% if grafana_domain | length > 0 %}
+domain = {{ grafana_domain }}
+{% endif %}
+
+[security]
+admin_user = {{ grafana_admin_user }}
+admin_password = {{ grafana_admin_password }}
+disable_gravatar = true
+cookie_secure = false
+cookie_samesite = strict
+
+[users]
+allow_sign_up = {{ grafana_allow_sign_up | bool | lower }}
+allow_org_create = false
+
+[auth.anonymous]
+enabled = false
+
+[analytics]
+reporting_enabled = false
+check_for_updates = false
+
+[unified_alerting]
+enabled = true
+
+[log]
+mode = console file
+level = info
+
+[paths]
+provisioning = /etc/grafana/provisioning
+

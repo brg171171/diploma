@@ -71,3 +71,6 @@ evidence/*password*
 *.log
 tmp/
 .cache/
+
+# Local Ansible package cache
+ansible/.cache/

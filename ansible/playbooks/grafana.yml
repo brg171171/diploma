@@ -1,0 +1,13 @@
+---
+- name: Configure Grafana
+  hosts: grafana
+  become: true
+  gather_facts: true
+
+  vars_files:
+    - ../inventory/group_vars/all.yml
+    - ../inventory/group_vars/vault.yml
+
+  roles:
+    - role: grafana
+

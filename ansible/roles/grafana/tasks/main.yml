@@ -1,1 +1,174 @@
 ---
+- name: Validate required Grafana variables
+  ansible.builtin.assert:
+    that:
+      - grafana_admin_password is defined
+      - grafana_admin_password | length >= 12
+      - grafana_prometheus_url is match('^https?://.+:[0-9]+$')
+    fail_msg: >-
+      Define vault_grafana_admin_password (at least 12 characters) in
+      group_vars/vault.yml and set grafana_prometheus_url to the private
+      Prometheus address.
+  no_log: true
+
+- name: Validate Grafana package architecture
+  ansible.builtin.assert:
+    that:
+      - ansible_architecture == "x86_64"
+    fail_msg: >-
+      This role currently contains the amd64 Grafana package.
+      Detected architecture: {{ ansible_architecture }}.
+
+- name: Create Grafana package cache on Ansible controller
+  ansible.builtin.file:
+    path: "{{ grafana_controller_cache_dir }}"
+    state: directory
+    mode: "0755"
+  delegate_to: localhost
+  become: false
+  run_once: true
+
+- name: Download Grafana package to Ansible controller
+  ansible.builtin.get_url:
+    url: "{{ grafana_deb_url }}"
+    dest: "{{ grafana_controller_deb_path }}"
+    checksum: "sha256:{{ grafana_deb_sha256 }}"
+    mode: "0644"
+    timeout: 120
+    force: false
+  delegate_to: localhost
+  become: false
+  run_once: true
+
+- name: Remove inaccessible Grafana APT repository definitions
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/apt/sources.list.d/grafana.list
+    - /etc/apt/sources.list.d/grafana.sources
+
+- name: Remove obsolete Grafana repository keys
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/apt/keyrings/grafana.asc
+    - /etc/apt/keyrings/grafana.gpg
+
+- name: Update Ubuntu APT cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Copy Grafana package to target host
+  ansible.builtin.copy:
+    src: "{{ grafana_controller_deb_path }}"
+    dest: "{{ grafana_remote_deb_path }}"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Install Grafana from local package
+  ansible.builtin.apt:
+    deb: "{{ grafana_remote_deb_path }}"
+    state: present
+  notify: Restart Grafana
+
+- name: Create Grafana provisioning directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: grafana
+    mode: "0750"
+  loop:
+    - /etc/grafana/provisioning/datasources
+    - /etc/grafana/provisioning/dashboards
+    - /etc/grafana/provisioning/alerting
+    - "{{ grafana_dashboards_path }}"
+
+- name: Configure Grafana server
+  ansible.builtin.template:
+    src: grafana.ini.j2
+    dest: /etc/grafana/grafana.ini
+    owner: root
+    group: grafana
+    mode: "0640"
+  no_log: true
+  notify: Restart Grafana
+
+- name: Provision Prometheus datasource
+  ansible.builtin.template:
+    src: datasource-prometheus.yml.j2
+    dest: /etc/grafana/provisioning/datasources/prometheus.yml
+    owner: root
+    group: grafana
+    mode: "0640"
+  notify: Restart Grafana
+
+- name: Provision dashboard provider
+  ansible.builtin.copy:
+    src: dashboard-provider.yml
+    dest: /etc/grafana/provisioning/dashboards/diploma.yml
+    owner: root
+    group: grafana
+    mode: "0640"
+  notify: Restart Grafana
+
+- name: Install provisioned dashboards
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ grafana_dashboards_path }}/{{ item }}"
+    owner: root
+    group: grafana
+    mode: "0640"
+  loop:
+    - system-overview.json
+    - web-nginx-overview.json
+  notify: Restart Grafana
+
+- name: Provision Grafana alert rules
+  ansible.builtin.template:
+    src: alert-rules.yml.j2
+    dest: /etc/grafana/provisioning/alerting/diploma-rules.yml
+    owner: root
+    group: grafana
+    mode: "0640"
+  when: grafana_alerts_enabled | bool
+  notify: Restart Grafana
+
+- name: Enable and start Grafana
+  ansible.builtin.systemd_service:
+    name: "{{ grafana_service_name }}"
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Flush Grafana restart handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Wait for Grafana health endpoint
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ grafana_http_port }}/api/health"
+    method: GET
+    status_code: 200
+    return_content: true
+  register: grafana_health
+  retries: 20
+  delay: 3
+  until:
+    - grafana_health.status == 200
+    - grafana_health.json.database == "ok"
+
+- name: Verify provisioned Prometheus datasource
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ grafana_http_port }}/api/datasources/uid/{{ grafana_prometheus_uid }}"
+    method: GET
+    user: "{{ grafana_admin_user }}"
+    password: "{{ grafana_admin_password }}"
+    force_basic_auth: true
+    status_code: 200
+    return_content: true
+  no_log: true
+

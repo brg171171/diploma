@@ -1,1 +1,21 @@
 ---
+grafana_version: "13.2.1"
+grafana_deb_filename: "grafana_13.2.1_33191028959_linux_amd64.deb"
+grafana_deb_url: "https://dl.grafana.com/grafana/release/13.2.1/grafana_13.2.1_33191028959_linux_amd64.deb"
+grafana_deb_sha256: "b4f088f661c5103746f23cb5cbbe2b2bb2e18ba9870ad68a3c2a90451f511ded"
+grafana_controller_cache_dir: "{{ playbook_dir }}/../.cache"
+grafana_controller_deb_path: "{{ grafana_controller_cache_dir }}/{{ grafana_deb_filename }}"
+grafana_remote_deb_path: "/tmp/{{ grafana_deb_filename }}"
+grafana_package_name: grafana
+grafana_service_name: grafana-server
+grafana_http_addr: "0.0.0.0"
+grafana_http_port: 3000
+grafana_domain: ""
+grafana_admin_user: admin
+grafana_admin_password: "{{ vault_grafana_admin_password }}"
+grafana_prometheus_url: "http://10.10.11.20:9090"
+grafana_prometheus_uid: prometheus
+grafana_dashboards_path: /var/lib/grafana/dashboards
+grafana_alerts_enabled: true
+grafana_allow_sign_up: false
+

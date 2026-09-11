@@ -1,0 +1,11 @@
+grafana | CHANGED | rc=0 >>
+/etc/grafana/provisioning/dashboards/sample.yaml
+/etc/grafana/provisioning/dashboards/diploma.yml
+/etc/grafana/provisioning/datasources/sample.yaml
+/etc/grafana/provisioning/datasources/prometheus.yml
+/etc/grafana/provisioning/plugins/sample.yaml
+/etc/grafana/provisioning/access-control/sample.yaml
+/etc/grafana/provisioning/alerting/sample.yaml
+/etc/grafana/provisioning/alerting/diploma-rules.yml
+/var/lib/grafana/dashboards/web-nginx-overview.json
+/var/lib/grafana/dashboards/system-overview.json

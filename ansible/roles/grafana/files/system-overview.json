@@ -1,0 +1,124 @@
+{
+  "annotations": {"list": []},
+  "editable": false,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 70}, {"color": "red", "value": 85}]}}, "overrides": []},
+      "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0},
+      "id": 1,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+      "targets": [{"editorMode": "code", "expr": "100 - (avg by(instance) (rate(node_cpu_seconds_total{job=\"node_exporter\",mode=\"idle\",instance=~\"$instance\"}[5m])) * 100)", "legendFormat": "{{instance}}", "range": true, "refId": "A"}],
+      "title": "CPU Utilization",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 100}, {"color": "red", "value": 150}]}}, "overrides": []},
+      "gridPos": {"h": 8, "w": 6, "x": 6, "y": 0},
+      "id": 2,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+      "targets": [{"editorMode": "code", "expr": "100 * node_load1{job=\"node_exporter\",instance=~\"$instance\"} / count by(instance) (node_cpu_seconds_total{job=\"node_exporter\",mode=\"idle\",instance=~\"$instance\"})", "legendFormat": "{{instance}}", "range": true, "refId": "A"}],
+      "title": "CPU Saturation",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 80}, {"color": "red", "value": 90}]}}, "overrides": []},
+      "gridPos": {"h": 8, "w": 6, "x": 12, "y": 0},
+      "id": 3,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+      "targets": [{"editorMode": "code", "expr": "100 * (1 - node_memory_MemAvailable_bytes{job=\"node_exporter\",instance=~\"$instance\"} / node_memory_MemTotal_bytes{job=\"node_exporter\",instance=~\"$instance\"})", "legendFormat": "{{instance}}", "range": true, "refId": "A"}],
+      "title": "RAM Utilization",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "ops", "min": 0, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 1}, {"color": "red", "value": 10}]}}, "overrides": []},
+      "gridPos": {"h": 8, "w": 6, "x": 18, "y": 0},
+      "id": 4,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+      "targets": [{"editorMode": "code", "expr": "rate(node_vmstat_pgmajfault{job=\"node_exporter\",instance=~\"$instance\"}[5m])", "legendFormat": "{{instance}} major faults/s", "range": true, "refId": "A"}],
+      "title": "RAM Saturation",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 75}, {"color": "red", "value": 85}]}}, "overrides": []},
+      "gridPos": {"h": 8, "w": 6, "x": 0, "y": 8},
+      "id": 5,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+      "targets": [{"editorMode": "code", "expr": "100 * (1 - node_filesystem_avail_bytes{job=\"node_exporter\",instance=~\"$instance\",fstype!~\"tmpfs|overlay|squashfs\"} / node_filesystem_size_bytes{job=\"node_exporter\",instance=~\"$instance\",fstype!~\"tmpfs|overlay|squashfs\"})", "legendFormat": "{{instance}} {{mountpoint}}", "range": true, "refId": "A"}],
+      "title": "Disk Utilization",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 70}, {"color": "red", "value": 90}]}}, "overrides": []},
+      "gridPos": {"h": 8, "w": 6, "x": 6, "y": 8},
+      "id": 6,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+      "targets": [{"editorMode": "code", "expr": "100 * rate(node_disk_io_time_seconds_total{job=\"node_exporter\",instance=~\"$instance\"}[5m])", "legendFormat": "{{instance}} {{device}}", "range": true, "refId": "A"}],
+      "title": "Disk Saturation",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "Bps", "min": 0, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 10485760}, {"color": "red", "value": 52428800}]}}, "overrides": []},
+      "gridPos": {"h": 8, "w": 6, "x": 12, "y": 8},
+      "id": 7,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+      "targets": [
+        {"editorMode": "code", "expr": "rate(node_network_receive_bytes_total{job=\"node_exporter\",instance=~\"$instance\",device!=\"lo\"}[5m])", "legendFormat": "{{instance}} {{device}} RX", "range": true, "refId": "A"},
+        {"editorMode": "code", "expr": "rate(node_network_transmit_bytes_total{job=\"node_exporter\",instance=~\"$instance\",device!=\"lo\"}[5m])", "legendFormat": "{{instance}} {{device}} TX", "range": true, "refId": "B"}
+      ],
+      "title": "Network Utilization",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "pps", "min": 0, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 0.1}, {"color": "red", "value": 1}]}}, "overrides": []},
+      "gridPos": {"h": 8, "w": 6, "x": 18, "y": 8},
+      "id": 8,
+      "options": {"legend": {"displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+      "targets": [{"editorMode": "code", "expr": "rate(node_network_receive_errs_total{job=\"node_exporter\",instance=~\"$instance\",device!=\"lo\"}[5m]) + rate(node_network_transmit_errs_total{job=\"node_exporter\",instance=~\"$instance\",device!=\"lo\"}[5m])", "legendFormat": "{{instance}} {{device}}", "range": true, "refId": "A"}],
+      "title": "Network Errors",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["diploma", "node-exporter", "USE"],
+  "templating": {
+    "list": [{
+      "allValue": ".*",
+      "current": {"selected": true, "text": "All", "value": "$__all"},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "definition": "label_values(node_uname_info{job=\"node_exporter\"}, instance)",
+      "hide": 0,
+      "includeAll": true,
+      "label": "Instance",
+      "multi": true,
+      "name": "instance",
+      "options": [],
+      "query": {"query": "label_values(node_uname_info{job=\"node_exporter\"}, instance)", "refId": "VariableQueryEditor-VariableQuery"},
+      "refresh": 1,
+      "regex": "",
+      "skipUrlSync": false,
+      "sort": 1,
+      "type": "query"
+    }]
+  },
+  "time": {"from": "now-6h", "to": "now"},
+  "timezone": "browser",
+  "title": "Diploma / System Overview",
+  "uid": "diploma-system",
+  "version": 1,
+  "weekStart": ""
+}
+

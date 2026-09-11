@@ -1,0 +1,257 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: Diploma infrastructure
+    folder: Diploma Alerts
+    interval: 1m
+    rules:
+      - uid: diploma-target-down
+        title: Prometheus target is down
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: {{ grafana_prometheus_uid }}
+            model:
+              editorMode: code
+              expr: 'up{job=~"node_exporter|nginxlog_exporter"}'
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              settings:
+                mode: dropNN
+              type: reduce
+              refId: B
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              expression: B
+              type: threshold
+              conditions:
+                - evaluator:
+                    params:
+                      - 1
+                    type: lt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - C
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              refId: C
+        noDataState: Alerting
+        execErrState: Error
+        for: 2m
+        annotations:
+          summary: 'Exporter unavailable on {{ "{{ $labels.instance }}" }}'
+          description: 'Prometheus target {{ "{{ $labels.job }}" }} is down.'
+        labels:
+          severity: critical
+        isPaused: false
+
+      - uid: diploma-high-cpu
+        title: High CPU utilization
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: {{ grafana_prometheus_uid }}
+            model:
+              editorMode: code
+              expr: '100 - (avg by(instance) (rate(node_cpu_seconds_total{job="node_exporter",mode="idle"}[5m])) * 100)'
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              type: reduce
+              refId: B
+            relativeTimeRange: {from: 0, to: 0}
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              expression: B
+              type: threshold
+              conditions:
+                - evaluator: {params: [85], type: gt}
+                  operator: {type: and}
+                  query: {params: [C]}
+                  reducer: {params: [], type: last}
+                  type: query
+              refId: C
+            relativeTimeRange: {from: 0, to: 0}
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: 'High CPU utilization on {{ "{{ $labels.instance }}" }}'
+          description: 'CPU utilization has exceeded 85% for five minutes.'
+        labels:
+          severity: warning
+        isPaused: false
+
+      - uid: diploma-high-memory
+        title: High RAM utilization
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: {{ grafana_prometheus_uid }}
+            model:
+              editorMode: code
+              expr: '100 * (1 - node_memory_MemAvailable_bytes{job="node_exporter"} / node_memory_MemTotal_bytes{job="node_exporter"})'
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              type: reduce
+              refId: B
+            relativeTimeRange: {from: 0, to: 0}
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              expression: B
+              type: threshold
+              conditions:
+                - evaluator: {params: [90], type: gt}
+                  operator: {type: and}
+                  query: {params: [C]}
+                  reducer: {params: [], type: last}
+                  type: query
+              refId: C
+            relativeTimeRange: {from: 0, to: 0}
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: 'High RAM utilization on {{ "{{ $labels.instance }}" }}'
+          description: 'RAM utilization has exceeded 90% for five minutes.'
+        labels:
+          severity: warning
+        isPaused: false
+
+      - uid: diploma-low-disk
+        title: Low disk space
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: {{ grafana_prometheus_uid }}
+            model:
+              editorMode: code
+              expr: '100 * (1 - node_filesystem_avail_bytes{job="node_exporter",fstype!~"tmpfs|overlay|squashfs"} / node_filesystem_size_bytes{job="node_exporter",fstype!~"tmpfs|overlay|squashfs"})'
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              type: reduce
+              refId: B
+            relativeTimeRange: {from: 0, to: 0}
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              expression: B
+              type: threshold
+              conditions:
+                - evaluator: {params: [85], type: gt}
+                  operator: {type: and}
+                  query: {params: [C]}
+                  reducer: {params: [], type: last}
+                  type: query
+              refId: C
+            relativeTimeRange: {from: 0, to: 0}
+        noDataState: NoData
+        execErrState: Error
+        for: 10m
+        annotations:
+          summary: 'Low disk space on {{ "{{ $labels.instance }}" }}'
+          description: 'Filesystem utilization has exceeded 85%.'
+        labels:
+          severity: warning
+        isPaused: false
+
+      - uid: diploma-nginx-5xx
+        title: Nginx 5xx responses detected
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: {{ grafana_prometheus_uid }}
+            model:
+              editorMode: code
+              expr: 'sum by(instance) (rate(nginx_http_response_count_total{status=~"5.."}[5m]))'
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              type: reduce
+              refId: B
+            relativeTimeRange: {from: 0, to: 0}
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              expression: B
+              type: threshold
+              conditions:
+                - evaluator: {params: [0], type: gt}
+                  operator: {type: and}
+                  query: {params: [C]}
+                  reducer: {params: [], type: last}
+                  type: query
+              refId: C
+            relativeTimeRange: {from: 0, to: 0}
+        noDataState: OK
+        execErrState: Error
+        for: 2m
+        annotations:
+          summary: 'Nginx returns 5xx responses on {{ "{{ $labels.instance }}" }}'
+          description: 'The five-minute 5xx response rate is greater than zero.'
+        labels:
+          severity: critical
+        isPaused: false
+
