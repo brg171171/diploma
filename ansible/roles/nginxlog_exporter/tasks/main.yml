@@ -1,1 +1,108 @@
 ---
+- name: Create nginxlog exporter group
+  ansible.builtin.group:
+    name: "{{ nginxlog_exporter_group }}"
+    system: true
+    state: present
+
+- name: Create nginxlog exporter user
+  ansible.builtin.user:
+    name: "{{ nginxlog_exporter_user }}"
+    group: "{{ nginxlog_exporter_group }}"
+    groups:
+      - adm
+    append: true
+    system: true
+    shell: /usr/sbin/nologin
+    create_home: false
+    state: present
+
+- name: Download nginxlog exporter archive
+  ansible.builtin.get_url:
+    url: "{{ nginxlog_exporter_download_url }}"
+    dest: "/tmp/{{ nginxlog_exporter_archive }}"
+    owner: root
+    group: root
+    mode: "0644"
+  register: nginxlog_exporter_download
+
+- name: Create temporary extraction directory
+  ansible.builtin.file:
+    path: "/tmp/nginxlog-exporter-{{ nginxlog_exporter_version }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Extract nginxlog exporter
+  ansible.builtin.unarchive:
+    src: "/tmp/{{ nginxlog_exporter_archive }}"
+    dest: "/tmp/nginxlog-exporter-{{ nginxlog_exporter_version }}"
+    remote_src: true
+  when: nginxlog_exporter_download.changed
+
+- name: Find extracted nginxlog exporter binary
+  ansible.builtin.find:
+    paths: "/tmp/nginxlog-exporter-{{ nginxlog_exporter_version }}"
+    patterns: prometheus-nginxlog-exporter
+    file_type: file
+    recurse: true
+  register: nginxlog_exporter_binary_files
+
+- name: Check that exporter binary was found
+  ansible.builtin.assert:
+    that:
+      - nginxlog_exporter_binary_files.matched | int > 0
+    fail_msg: "prometheus-nginxlog-exporter binary was not found in the archive"
+
+- name: Install nginxlog exporter binary
+  ansible.builtin.copy:
+    src: "{{ nginxlog_exporter_binary_files.files[0].path }}"
+    dest: "{{ nginxlog_exporter_binary }}"
+    owner: root
+    group: root
+    mode: "0755"
+    remote_src: true
+  notify: Restart nginxlog exporter
+
+- name: Install nginxlog exporter configuration
+  ansible.builtin.template:
+    src: prometheus-nginxlog-exporter.hcl.j2
+    dest: "{{ nginxlog_exporter_config }}"
+    owner: root
+    group: "{{ nginxlog_exporter_group }}"
+    mode: "0640"
+  notify: Restart nginxlog exporter
+
+- name: Install nginxlog exporter systemd unit
+  ansible.builtin.template:
+    src: prometheus-nginxlog-exporter.service.j2
+    dest: /etc/systemd/system/prometheus-nginxlog-exporter.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Reload systemd
+    - Restart nginxlog exporter
+
+- name: Check access to nginx access log
+  ansible.builtin.command:
+    cmd: >-
+      runuser -u {{ nginxlog_exporter_user }} --
+      test -r {{ nginxlog_exporter_access_log }}
+  changed_when: false
+
+- name: Verify nginxlog exporter configuration
+  ansible.builtin.command:
+    cmd: >-
+      {{ nginxlog_exporter_binary }}
+      -config-file {{ nginxlog_exporter_config }}
+      -verify-config
+  changed_when: false
+
+- name: Enable and start nginxlog exporter
+  ansible.builtin.systemd_service:
+    name: prometheus-nginxlog-exporter
+    enabled: true
+    state: started
+    daemon_reload: true

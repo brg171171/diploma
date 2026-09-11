@@ -1,0 +1,26 @@
+[Unit]
+Description=Prometheus Nginx Log Exporter
+Documentation=https://github.com/martin-helmich/prometheus-nginxlog-exporter
+Wants=network-online.target
+After=network-online.target nginx.service
+
+[Service]
+Type=simple
+User={{ nginxlog_exporter_user }}
+Group={{ nginxlog_exporter_group }}
+SupplementaryGroups=adm
+
+ExecStart={{ nginxlog_exporter_binary }} \
+  -config-file {{ nginxlog_exporter_config }}
+
+Restart=on-failure
+RestartSec=5s
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadOnlyPaths=/var/log/nginx
+
+[Install]
+WantedBy=multi-user.target

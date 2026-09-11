@@ -1,0 +1,34 @@
+listen {
+  address          = "{{ nginxlog_exporter_listen_address }}"
+  port             = {{ nginxlog_exporter_listen_port }}
+  metrics_endpoint = "{{ nginxlog_exporter_metrics_path }}"
+}
+
+namespace "{{ nginxlog_exporter_namespace }}" {
+  format = "$remote_addr - $remote_user [$time_local] \"$request\" $status $body_bytes_sent \"$http_referer\" \"$http_user_agent\""
+
+  source {
+    files = [
+      "{{ nginxlog_exporter_access_log }}"
+    ]
+  }
+
+  labels {
+    environment = "{{ nginxlog_exporter_environment }}"
+    service     = "{{ nginxlog_exporter_service_label }}"
+  }
+
+  histogram_buckets = [
+    0.005,
+    0.01,
+    0.025,
+    0.05,
+    0.1,
+    0.25,
+    0.5,
+    1,
+    2.5,
+    5,
+    10
+  ]
+}

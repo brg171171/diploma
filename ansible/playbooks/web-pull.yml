@@ -26,6 +26,7 @@
     - role: common
     - role: nginx_site
     - role: node_exporter
+    - role: nginxlog_exporter
 
     # Раскомментируйте после заполнения соответствующих ролей:
     # - role: node_exporter

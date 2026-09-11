@@ -1,1 +1,23 @@
 ---
+nginxlog_exporter_version: "1.11.0"
+nginxlog_exporter_arch: "amd64"
+
+nginxlog_exporter_archive: >-
+  prometheus-nginxlog-exporter_{{ nginxlog_exporter_version }}_linux_{{ nginxlog_exporter_arch }}.tar.gz
+
+nginxlog_exporter_download_url: >-
+  https://github.com/martin-helmich/prometheus-nginxlog-exporter/releases/download/v{{ nginxlog_exporter_version }}/{{ nginxlog_exporter_archive }}
+
+nginxlog_exporter_user: nginxlog_exporter
+nginxlog_exporter_group: nginxlog_exporter
+nginxlog_exporter_binary: /usr/local/bin/prometheus-nginxlog-exporter
+nginxlog_exporter_config: /etc/prometheus-nginxlog-exporter.hcl
+
+nginxlog_exporter_listen_address: "0.0.0.0"
+nginxlog_exporter_listen_port: 4040
+nginxlog_exporter_metrics_path: /metrics
+
+nginxlog_exporter_access_log: /var/log/nginx/access.log
+nginxlog_exporter_namespace: nginx
+nginxlog_exporter_environment: diploma
+nginxlog_exporter_service_label: web
