@@ -1,0 +1,11 @@
+---
+- name: Configure Alertmanager
+  hosts: prometheus
+  become: true
+  gather_facts: true
+
+  vars_files:
+    - ../inventory/group_vars/vault.yml
+
+  roles:
+    - role: alertmanager

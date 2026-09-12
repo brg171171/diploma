@@ -170,3 +170,65 @@
 
 - name: Apply notified handlers
   ansible.builtin.meta: flush_handlers
+
+- name: Create Prometheus rules directory
+  ansible.builtin.file:
+    path: /etc/prometheus/rules
+    state: directory
+    owner: prometheus
+    group: prometheus
+    mode: "0755"
+
+- name: Remove legacy duplicate Prometheus alert-rule files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/prometheus/rules/alerts.yml
+    - /etc/prometheus/rules/alerts-rules.yml
+  notify: Restart Prometheus
+
+- name: Install Prometheus alert rules
+  ansible.builtin.template:
+    src: alert-rules.yml.j2
+    dest: /etc/prometheus/rules/alert-rules.yml
+    owner: prometheus
+    group: prometheus
+    mode: "0644"
+  notify: Reload Prometheus
+
+- name: Configure Prometheus
+  ansible.builtin.template:
+    src: prometheus.yml.j2
+    dest: /etc/prometheus/prometheus.yml
+    owner: prometheus
+    group: prometheus
+    mode: "0644"
+  notify: Restart Prometheus
+
+- name: Install Alertmanager configuration
+  ansible.builtin.template:
+    src: alertmanager.yml.j2
+    dest: /etc/prometheus/alertmanager.yml
+    owner: prometheus
+    group: prometheus
+    mode: "0640"
+  register: alertmanager_configuration
+  no_log: true
+
+- name: Validate Alertmanager configuration
+  ansible.builtin.command:
+    argv:
+      - /usr/bin/amtool
+      - check-config
+      - /etc/prometheus/alertmanager.yml
+  changed_when: false
+
+- name: Restart Alertmanager after configuration change
+  ansible.builtin.systemd_service:
+    name: prometheus-alertmanager
+    state: restarted
+    enabled: true
+  when: alertmanager_configuration.changed
+
+

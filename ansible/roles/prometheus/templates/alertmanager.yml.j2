@@ -1,0 +1,46 @@
+---
+global:
+  resolve_timeout: 5m
+  smtp_smarthost: "{{ alertmanager_smtp_smarthost }}"
+  smtp_from: "{{ alertmanager_smtp_from }}"
+  smtp_auth_username: "{{ alertmanager_smtp_username }}"
+  smtp_auth_password: "{{ vault_alertmanager_smtp_app_password }}"
+  smtp_require_tls: true
+
+route:
+  receiver: email-default
+  group_by:
+    - alertname
+    - instance
+    - job
+    - severity
+  group_wait: 10s
+  group_interval: 1m
+  repeat_interval: 12h
+
+  routes:
+    - receiver: email-critical
+      matchers:
+        - severity="critical"
+      repeat_interval: 30m
+
+    - receiver: email-warning
+      matchers:
+        - severity="warning"
+      repeat_interval: 4h
+
+receivers:
+  - name: email-default
+    email_configs:
+      - to: "{{ alertmanager_smtp_to }}"
+        send_resolved: true
+
+  - name: email-warning
+    email_configs:
+      - to: "{{ alertmanager_smtp_to }}"
+        send_resolved: true
+
+  - name: email-critical
+    email_configs:
+      - to: "{{ alertmanager_smtp_to }}"
+        send_resolved: true

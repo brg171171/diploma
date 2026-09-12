@@ -1,0 +1,13 @@
+---
+groups:
+  - name: diploma-test-alerts
+    rules:
+      - alert: DiplomaTestAlert
+        expr: vector(1)
+        for: 30s
+        labels:
+          severity: warning
+          environment: diploma
+        annotations:
+          summary: "Тестовое оповещение дипломного проекта"
+          description: "Проверка цепочки Prometheus → Alertmanager → получатель."

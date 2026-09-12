@@ -1,0 +1,157 @@
+---
+groups:
+  - name: infrastructure-availability
+    interval: 30s
+    rules:
+      - alert: ExporterDown
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: critical
+          environment: diploma
+        annotations:
+          summary: "Exporter недоступен: {% raw %}{{ $labels.instance }}{% endraw %}"
+          description: >-
+            Prometheus не может опросить job={% raw %}{{ $labels.job }}{% endraw %}
+            на instance={% raw %}{{ $labels.instance }}{% endraw %}
+            более двух минут.
+
+  - name: infrastructure-resources
+    interval: 30s
+    rules:
+      - alert: HighCPUUtilization
+        expr: |
+          100 * (
+            1 - avg by (instance) (
+              rate(node_cpu_seconds_total{mode="idle"}[5m])
+            )
+          ) > 85
+        for: 10m
+        labels:
+          severity: warning
+          environment: diploma
+        annotations:
+          summary: "Высокая загрузка CPU: {% raw %}{{ $labels.instance }}{% endraw %}"
+          description: >-
+            CPU utilization превышает 85%.
+            Текущее значение: {% raw %}{{ printf "%.1f" $value }}{% endraw %}%.
+
+      - alert: CriticalCPUUtilization
+        expr: |
+          100 * (
+            1 - avg by (instance) (
+              rate(node_cpu_seconds_total{mode="idle"}[5m])
+            )
+          ) > 95
+        for: 5m
+        labels:
+          severity: critical
+          environment: diploma
+        annotations:
+          summary: "Критическая загрузка CPU: {% raw %}{{ $labels.instance }}{% endraw %}"
+          description: >-
+            CPU utilization превышает 95%.
+            Текущее значение: {% raw %}{{ printf "%.1f" $value }}{% endraw %}%.
+
+      - alert: HighMemoryUtilization
+        expr: |
+          100 * (
+            1 -
+            node_memory_MemAvailable_bytes
+            /
+            node_memory_MemTotal_bytes
+          ) > 85
+        for: 10m
+        labels:
+          severity: warning
+          environment: diploma
+        annotations:
+          summary: "Высокое использование RAM: {% raw %}{{ $labels.instance }}{% endraw %}"
+          description: >-
+            Использование RAM превышает 85%.
+            Текущее значение: {% raw %}{{ printf "%.1f" $value }}{% endraw %}%.
+
+      - alert: CriticalMemoryUtilization
+        expr: |
+          100 * (
+            1 -
+            node_memory_MemAvailable_bytes
+            /
+            node_memory_MemTotal_bytes
+          ) > 95
+        for: 5m
+        labels:
+          severity: critical
+          environment: diploma
+        annotations:
+          summary: "Критическое использование RAM: {% raw %}{{ $labels.instance }}{% endraw %}"
+          description: >-
+            Использование RAM превышает 95%.
+            Текущее значение: {% raw %}{{ printf "%.1f" $value }}{% endraw %}%.
+
+      - alert: DiskSpaceLow
+        expr: |
+          100 * (
+            1 -
+            node_filesystem_avail_bytes{
+              fstype!~"tmpfs|devtmpfs|overlay|squashfs",
+              mountpoint!~"/run.*"
+            }
+            /
+            node_filesystem_size_bytes{
+              fstype!~"tmpfs|devtmpfs|overlay|squashfs",
+              mountpoint!~"/run.*"
+            }
+          ) > 85
+        for: 15m
+        labels:
+          severity: warning
+          environment: diploma
+        annotations:
+          summary: "Заканчивается место: {% raw %}{{ $labels.instance }}{% endraw %}"
+          description: >-
+            Использование filesystem {% raw %}{{ $labels.mountpoint }}{% endraw %}
+            превышает 85%.
+            Текущее значение: {% raw %}{{ printf "%.1f" $value }}{% endraw %}%.
+
+      - alert: DiskSpaceCritical
+        expr: |
+          100 * (
+            1 -
+            node_filesystem_avail_bytes{
+              fstype!~"tmpfs|devtmpfs|overlay|squashfs",
+              mountpoint!~"/run.*"
+            }
+            /
+            node_filesystem_size_bytes{
+              fstype!~"tmpfs|devtmpfs|overlay|squashfs",
+              mountpoint!~"/run.*"
+            }
+          ) > 95
+        for: 5m
+        labels:
+          severity: critical
+          environment: diploma
+        annotations:
+          summary: "Критически мало места: {% raw %}{{ $labels.instance }}{% endraw %}"
+          description: >-
+            Использование filesystem {% raw %}{{ $labels.mountpoint }}{% endraw %}
+            превышает 95%.
+            Текущее значение: {% raw %}{{ printf "%.1f" $value }}{% endraw %}%.
+
+      - alert: FilesystemReadOnly
+        expr: |
+          node_filesystem_readonly{
+            fstype!~"tmpfs|devtmpfs|overlay|squashfs"
+          } == 1
+        for: 2m
+        labels:
+          severity: critical
+          environment: diploma
+        annotations:
+          summary: "Filesystem перешла в read-only"
+          description: >-
+            Filesystem {% raw %}{{ $labels.mountpoint }}{% endraw %}
+            на {% raw %}{{ $labels.instance }}{% endraw %}
+            доступна только для чтения.
+

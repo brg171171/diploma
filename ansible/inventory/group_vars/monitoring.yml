@@ -1,0 +1,11 @@
+---
+alertmanager_smtp_smarthost: "smtp.gmail.com:587"
+alertmanager_smtp_from: "b.r.gorelik@gmail.com"
+alertmanager_smtp_username: "b.r.gorelik@gmail.com"
+alertmanager_smtp_to: "it.profopinion@gmail.com"
+
+alertmanager_group_wait: "10s"
+alertmanager_group_interval: "1m"
+alertmanager_repeat_interval_default: "12h"
+alertmanager_repeat_interval_warning: "4h"
+alertmanager_repeat_interval_critical: "30m"
