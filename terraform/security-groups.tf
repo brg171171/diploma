@@ -136,6 +136,13 @@ resource "yandex_vpc_security_group" "prometheus" {
     predefined_target = "self_security_group"
   }
 
+  ingress {
+    description    = "Alertmanager API from Grafana"
+    protocol       = "TCP"
+    port           = 9093
+    v4_cidr_blocks = ["${local.private_ips.grafana}/32"]
+  }
+
   # 9093 (Alertmanager) и 9201 (PostgreSQL adapter) остаются локальными.
   # Для диагностики используйте SSH port forwarding через bastion.
   egress {

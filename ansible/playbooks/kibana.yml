@@ -1,0 +1,7 @@
+---
+- name: Configure Kibana
+  hosts: kibana
+  become: true
+  gather_facts: true
+  roles:
+    - role: kibana

@@ -1,0 +1,8 @@
+---
+- name: Configure Filebeat on web instances
+  hosts: web
+  become: true
+  gather_facts: true
+  serial: 1
+  roles:
+    - role: filebeat

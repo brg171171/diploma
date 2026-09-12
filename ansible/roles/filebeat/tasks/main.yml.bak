@@ -101,62 +101,17 @@
   changed_when: false
   failed_when: false
 
-- name: Create local Elastic package cache for Filebeat
-  ansible.builtin.file:
-    path: "{{ playbook_dir }}/../.cache/elastic"
-    state: directory
-    mode: "0755"
-  delegate_to: localhost
-  become: false
-  run_once: true
-
-- name: Download Filebeat SHA-512 file to Ansible controller
-  ansible.builtin.get_url:
-    url: "{{ filebeat_deb_url }}.sha512"
-    dest: >-
-      {{ playbook_dir }}/../.cache/elastic/filebeat-{{
-      elastic_stack_version }}-amd64.deb.sha512
-    mode: "0644"
-    force: false
-  delegate_to: localhost
-  become: false
-  run_once: true
-
-- name: Download and verify Filebeat package on Ansible controller
+- name: Download Filebeat package with SHA-512 verification
   ansible.builtin.get_url:
     url: "{{ filebeat_deb_url }}"
-    dest: >-
-      {{ playbook_dir }}/../.cache/elastic/filebeat-{{
-      elastic_stack_version }}-amd64.deb
-    checksum: >-
-      sha512:{{
-        lookup(
-          'ansible.builtin.file',
-          playbook_dir
-          ~ '/../.cache/elastic/filebeat-'
-          ~ elastic_stack_version
-          ~ '-amd64.deb.sha512'
-        ).split()[0]
-      }}
-    mode: "0644"
-  delegate_to: localhost
-  become: false
-  run_once: true
-
-- name: Copy verified Filebeat package to web instance
-  ansible.builtin.copy:
-    src: >-
-      {{ playbook_dir }}/../.cache/elastic/filebeat-{{
-      elastic_stack_version }}-amd64.deb
     dest: "{{ filebeat_deb_path }}"
+    checksum: "sha512:{{ filebeat_deb_url }}.sha512"
     mode: "0644"
   when: filebeat_stack_version_missing
   vars:
     filebeat_stack_version_missing: >-
-      {{
-        filebeat_installed_version.rc != 0 or
-        elastic_stack_version not in filebeat_installed_version.stdout
-      }}
+      {{ filebeat_installed_version.rc != 0 or
+         elastic_stack_version not in filebeat_installed_version.stdout }}
 
 - name: Install requested Filebeat version
   ansible.builtin.apt:

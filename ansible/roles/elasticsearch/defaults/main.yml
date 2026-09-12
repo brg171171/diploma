@@ -1,1 +1,19 @@
 ---
+elastic_stack_version: "9.5.3"
+elastic_stack_arch: "amd64"
+
+elasticsearch_cluster_name: "diploma-logging"
+elasticsearch_node_name: "{{ inventory_hostname }}"
+elasticsearch_bind_host: "0.0.0.0"
+elasticsearch_port: 9200
+elasticsearch_url: "http://{{ elasticsearch_host }}:{{ elasticsearch_port }}"
+elasticsearch_heap_size: "1g"
+
+elasticsearch_deb_url: >-
+  https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-{{ elastic_stack_version }}-{{ elastic_stack_arch }}.deb
+elasticsearch_deb_path: "/var/tmp/elasticsearch-{{ elastic_stack_version }}-{{ elastic_stack_arch }}.deb"
+elasticsearch_security_marker: "/var/lib/elasticsearch/.diploma-security-initialized"
+
+elasticsearch_filebeat_username: "filebeat_internal"
+elasticsearch_kibana_username: "kibana_system"
+elasticsearch_filebeat_index_pattern: "filebeat-*"

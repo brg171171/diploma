@@ -1,0 +1,22 @@
+---
+- name: Configure Elasticsearch
+  hosts: elasticsearch
+  become: true
+  gather_facts: true
+  roles:
+    - role: elasticsearch
+
+- name: Configure Kibana
+  hosts: kibana
+  become: true
+  gather_facts: true
+  roles:
+    - role: kibana
+
+- name: Configure Filebeat on web instances
+  hosts: web
+  become: true
+  gather_facts: true
+  serial: 1
+  roles:
+    - role: filebeat

@@ -27,6 +27,10 @@
     - role: nginx_site
     - role: node_exporter
     - role: nginxlog_exporter
+    - role: filebeat
+      vars:
+        filebeat_credentials_source: "lockbox"
+        filebeat_manage_assets: false
 
     # Раскомментируйте после заполнения соответствующих ролей:
     # - role: node_exporter

@@ -1,1 +1,278 @@
 ---
+- name: Validate Elasticsearch variables
+  ansible.builtin.assert:
+    that:
+      - elasticsearch_host is defined
+      - elasticsearch_host | length > 0
+      - vault_elasticsearch_password is defined
+      - vault_elasticsearch_password | length >= 12
+      - vault_kibana_system_password is defined
+      - vault_kibana_system_password | length >= 12
+      - vault_filebeat_password is defined
+      - vault_filebeat_password | length >= 12
+    fail_msg: >-
+      Define elasticsearch_host and the three Elastic passwords in
+      inventory/group_vars/all/vault.yml.
+  no_log: true
+
+- name: Install Elasticsearch package prerequisites
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Read installed Elasticsearch version
+  ansible.builtin.command:
+    argv:
+      - dpkg-query
+      - -W
+      - -f=${Version}
+      - elasticsearch
+  register: elasticsearch_installed_version
+  changed_when: false
+  failed_when: false
+
+- name: Create local Elastic package cache
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/../.cache/elastic"
+    state: directory
+    mode: "0755"
+  delegate_to: localhost
+  become: false
+  run_once: true
+
+- name: Download Elasticsearch SHA-512 file to Ansible controller
+  ansible.builtin.get_url:
+    url: >-
+      https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-{{
+      elastic_stack_version }}-amd64.deb.sha512
+    dest: >-
+      {{ playbook_dir }}/../.cache/elastic/elasticsearch-{{
+      elastic_stack_version }}-amd64.deb.sha512
+    mode: "0644"
+    force: true
+  delegate_to: localhost
+  become: false
+  run_once: true
+
+- name: Read expected Elasticsearch SHA-512 checksum
+  ansible.builtin.set_fact:
+    elasticsearch_package_sha512: >-
+      {{
+        lookup(
+          'ansible.builtin.file',
+          playbook_dir
+          ~ '/../.cache/elastic/elasticsearch-'
+          ~ elastic_stack_version
+          ~ '-amd64.deb.sha512'
+        ).split()[0]
+      }}
+
+- name: Download and verify Elasticsearch package on Ansible controller
+  ansible.builtin.get_url:
+    url: >-
+      https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-{{
+      elastic_stack_version }}-amd64.deb
+    dest: >-
+      {{ playbook_dir }}/../.cache/elastic/elasticsearch-{{
+      elastic_stack_version }}-amd64.deb
+    checksum: "sha512:{{ elasticsearch_package_sha512 }}"
+    mode: "0644"
+  delegate_to: localhost
+  become: false
+  run_once: true
+
+- name: Copy verified Elasticsearch package to target
+  ansible.builtin.copy:
+    src: >-
+      {{ playbook_dir }}/../.cache/elastic/elasticsearch-{{
+      elastic_stack_version }}-amd64.deb
+    dest: >-
+      /var/tmp/elasticsearch-{{ elastic_stack_version }}-amd64.deb
+    mode: "0644"
+
+- name: Install requested Elasticsearch version
+  ansible.builtin.apt:
+    deb: "{{ elasticsearch_deb_path }}"
+    state: present
+    allow_downgrade: true
+  when: elasticsearch_stack_version_missing
+  vars:
+    elasticsearch_stack_version_missing: >-
+      {{ elasticsearch_installed_version.rc != 0 or
+         elastic_stack_version not in elasticsearch_installed_version.stdout }}
+  notify: Restart Elasticsearch
+
+- name: Install Elasticsearch configuration
+  ansible.builtin.template:
+    src: elasticsearch.yml.j2
+    dest: /etc/elasticsearch/elasticsearch.yml
+    owner: root
+    group: elasticsearch
+    mode: "0660"
+  notify: Restart Elasticsearch
+
+- name: Install Elasticsearch heap configuration
+  ansible.builtin.template:
+    src: heap.options.j2
+    dest: /etc/elasticsearch/jvm.options.d/heap.options
+    owner: root
+    group: elasticsearch
+    mode: "0660"
+  notify: Restart Elasticsearch
+
+- name: Check Elasticsearch security initialization marker
+  ansible.builtin.stat:
+    path: "{{ elasticsearch_security_marker }}"
+  register: elasticsearch_security_state
+
+- name: List Elasticsearch keystore entries
+  ansible.builtin.command:
+    argv:
+      - /usr/share/elasticsearch/bin/elasticsearch-keystore
+      - list
+  register: elasticsearch_keystore_entries
+  changed_when: false
+
+- name: Add initial bootstrap password to Elasticsearch keystore
+  ansible.builtin.command:
+    argv:
+      - /usr/share/elasticsearch/bin/elasticsearch-keystore
+      - add
+      - -x
+      - -f
+      - bootstrap.password
+    stdin: "{{ vault_elasticsearch_password }}"
+  when:
+    - not elasticsearch_security_state.stat.exists
+    - "'bootstrap.password' not in elasticsearch_keystore_entries.stdout_lines"
+  no_log: true
+  notify: Restart Elasticsearch
+
+- name: Apply pending Elasticsearch restart
+  ansible.builtin.meta: flush_handlers
+
+- name: Enable and start Elasticsearch
+  ansible.builtin.systemd_service:
+    name: elasticsearch
+    state: started
+    enabled: true
+    daemon_reload: true
+
+- name: Wait for Elasticsearch TCP port
+  ansible.builtin.wait_for:
+    host: 127.0.0.1
+    port: "{{ elasticsearch_port }}"
+    delay: 2
+    timeout: 180
+
+- name: Wait for authenticated Elasticsearch API
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ elasticsearch_port }}"
+    method: GET
+    user: elastic
+    password: "{{ vault_elasticsearch_password }}"
+    force_basic_auth: true
+    status_code: 200
+  register: elasticsearch_api_ready
+  retries: 30
+  delay: 5
+  until: elasticsearch_api_ready.status == 200
+  no_log: true
+
+- name: Set the elastic superuser password
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ elasticsearch_port }}/_security/user/elastic/_password"
+    method: POST
+    user: elastic
+    password: "{{ vault_elasticsearch_password }}"
+    force_basic_auth: true
+    body_format: json
+    body:
+      password: "{{ vault_elasticsearch_password }}"
+    status_code: 200
+  no_log: true
+
+- name: Set the Kibana system user password
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ elasticsearch_port }}/_security/user/{{ elasticsearch_kibana_username }}/_password"
+    method: POST
+    user: elastic
+    password: "{{ vault_elasticsearch_password }}"
+    force_basic_auth: true
+    body_format: json
+    body:
+      password: "{{ vault_kibana_system_password }}"
+    status_code: 200
+  no_log: true
+
+- name: Create Filebeat writer role
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ elasticsearch_port }}/_security/role/filebeat_writer"
+    method: PUT
+    user: elastic
+    password: "{{ vault_elasticsearch_password }}"
+    force_basic_auth: true
+    body_format: json
+    body:
+      cluster:
+        - monitor
+        - read_ilm
+        - read_pipeline
+      indices:
+        - names:
+            - "{{ elasticsearch_filebeat_index_pattern }}"
+          privileges:
+            - create_doc
+            - auto_configure
+    status_code: 200
+  no_log: true
+
+- name: Create or update Filebeat service user
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ elasticsearch_port }}/_security/user/{{ elasticsearch_filebeat_username }}"
+    method: POST
+    user: elastic
+    password: "{{ vault_elasticsearch_password }}"
+    force_basic_auth: true
+    body_format: json
+    body:
+      password: "{{ vault_filebeat_password }}"
+      roles:
+        - filebeat_writer
+      full_name: "Diploma Filebeat service account"
+      enabled: true
+    status_code: 200
+  no_log: true
+
+- name: Mark Elasticsearch security initialization complete
+  ansible.builtin.file:
+    path: "{{ elasticsearch_security_marker }}"
+    state: touch
+    owner: elasticsearch
+    group: elasticsearch
+    mode: "0600"
+    modification_time: preserve
+    access_time: preserve
+
+- name: Refresh Elasticsearch keystore entries
+  ansible.builtin.command:
+    argv:
+      - /usr/share/elasticsearch/bin/elasticsearch-keystore
+      - list
+  register: elasticsearch_keystore_entries_after_initialization
+  changed_when: false
+
+- name: Remove bootstrap password after initialization
+  ansible.builtin.command:
+    argv:
+      - /usr/share/elasticsearch/bin/elasticsearch-keystore
+      - remove
+      - bootstrap.password
+  when: >-
+    'bootstrap.password' in
+    elasticsearch_keystore_entries_after_initialization.stdout_lines
+  no_log: true

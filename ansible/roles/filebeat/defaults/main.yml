@@ -1,1 +1,26 @@
 ---
+elastic_stack_version: "9.5.3"
+elastic_stack_arch: "amd64"
+
+elasticsearch_port: 9200
+elasticsearch_url: "http://{{ elasticsearch_host }}:{{ elasticsearch_port }}"
+elasticsearch_filebeat_username: "filebeat_internal"
+
+# "lockbox" is intended for unattended ansible-pull on Instance Group VMs.
+# "vault" can be used for a controller-driven deployment.
+filebeat_credentials_source: "lockbox"
+filebeat_lockbox_secret_id: ""
+filebeat_lockbox_secret_key: "password"
+filebeat_manage_assets: false
+
+filebeat_deb_url: >-
+  https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-{{ elastic_stack_version }}-{{ elastic_stack_arch }}.deb
+filebeat_deb_path: "/var/tmp/filebeat-{{ elastic_stack_version }}-{{ elastic_stack_arch }}.deb"
+filebeat_setup_marker: "/var/lib/filebeat/.diploma-setup-{{ elastic_stack_version }}"
+
+filebeat_environment: "diploma"
+filebeat_service_name: "web"
+filebeat_nginx_access_paths:
+  - /var/log/nginx/diploma_access.log*
+filebeat_nginx_error_paths:
+  - /var/log/nginx/error.log*

@@ -1,0 +1,15 @@
+# Managed by Ansible. Local changes will be overwritten.
+server.port: {{ kibana_port }}
+server.host: "{{ kibana_bind_host }}"
+server.name: "{{ kibana_server_name }}"
+
+elasticsearch.hosts:
+  - "{{ elasticsearch_url }}"
+elasticsearch.username: "{{ elasticsearch_kibana_username }}"
+elasticsearch.password: "{{ vault_kibana_system_password }}"
+
+xpack.security.encryptionKey: "{{ vault_kibana_security_encryption_key }}"
+xpack.encryptedSavedObjects.encryptionKey: "{{ vault_kibana_saved_objects_encryption_key }}"
+xpack.reporting.encryptionKey: "{{ vault_kibana_reporting_encryption_key }}"
+
+telemetry.enabled: false

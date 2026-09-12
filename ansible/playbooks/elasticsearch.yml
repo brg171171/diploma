@@ -1,0 +1,7 @@
+---
+- name: Configure Elasticsearch
+  hosts: elasticsearch
+  become: true
+  gather_facts: true
+  roles:
+    - role: elasticsearch

@@ -1,1 +1,21 @@
 ---
+elastic_stack_version: "9.5.3"
+elastic_stack_arch: "amd64"
+
+kibana_bind_host: "0.0.0.0"
+kibana_port: 5601
+kibana_url: "http://{{ kibana_host }}:{{ kibana_port }}"
+kibana_server_name: "{{ inventory_hostname }}"
+
+elasticsearch_port: 9200
+elasticsearch_url: "http://{{ elasticsearch_host }}:{{ elasticsearch_port }}"
+elasticsearch_kibana_username: "kibana_system"
+
+kibana_deb_url: >-
+  https://artifacts.elastic.co/downloads/kibana/kibana-{{ elastic_stack_version }}-{{ elastic_stack_arch }}.deb
+kibana_deb_path: "/var/tmp/kibana-{{ elastic_stack_version }}-{{ elastic_stack_arch }}.deb"
+
+kibana_data_view_id: "filebeat-nginx"
+kibana_data_view_name: "Nginx logs"
+kibana_data_view_pattern: "filebeat-*"
+kibana_data_view_time_field: "@timestamp"

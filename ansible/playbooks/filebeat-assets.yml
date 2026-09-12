@@ -1,0 +1,12 @@
+---
+# Run once from the controller after Elasticsearch is configured.
+# New Instance Group VMs do not need to repeat this step.
+- name: Load Filebeat Nginx pipelines and index-management assets
+  hosts: web[0]
+  become: true
+  gather_facts: false
+  vars:
+    filebeat_credentials_source: "vault"
+    filebeat_manage_assets: true
+  roles:
+    - role: filebeat

@@ -41,94 +41,17 @@
   changed_when: false
   failed_when: false
 
-- name: Create local Elastic package cache for Kibana
-  ansible.builtin.file:
-    path: "{{ playbook_dir }}/../.cache/elastic"
-    state: directory
-    mode: "0755"
-  delegate_to: localhost
-  become: false
-  run_once: true
-  when: kibana_stack_version_missing
-  vars:
-    kibana_stack_version_missing: >-
-      {{
-        kibana_installed_version.rc != 0 or
-        elastic_stack_version not in kibana_installed_version.stdout
-      }}
-
-- name: Download Kibana SHA-512 file to Ansible controller
-  ansible.builtin.get_url:
-    url: "{{ kibana_deb_url }}.sha512"
-    dest: >-
-      {{ playbook_dir }}/../.cache/elastic/kibana-{{
-      elastic_stack_version }}-amd64.deb.sha512
-    mode: "0644"
-    force: true
-  delegate_to: localhost
-  become: false
-  run_once: true
-  when: kibana_stack_version_missing
-  vars:
-    kibana_stack_version_missing: >-
-      {{
-        kibana_installed_version.rc != 0 or
-        elastic_stack_version not in kibana_installed_version.stdout
-      }}
-
-- name: Read expected Kibana SHA-512 checksum
-  ansible.builtin.set_fact:
-    kibana_package_sha512: >-
-      {{
-        lookup(
-          'ansible.builtin.file',
-          playbook_dir
-          ~ '/../.cache/elastic/kibana-'
-          ~ elastic_stack_version
-          ~ '-amd64.deb.sha512'
-        ).split()[0]
-      }}
-  when: kibana_stack_version_missing
-  vars:
-    kibana_stack_version_missing: >-
-      {{
-        kibana_installed_version.rc != 0 or
-        elastic_stack_version not in kibana_installed_version.stdout
-      }}
-
-- name: Download and verify Kibana package on Ansible controller
+- name: Download Kibana package with SHA-512 verification
   ansible.builtin.get_url:
     url: "{{ kibana_deb_url }}"
-    dest: >-
-      {{ playbook_dir }}/../.cache/elastic/kibana-{{
-      elastic_stack_version }}-amd64.deb
-    checksum: "sha512:{{ kibana_package_sha512 }}"
-    mode: "0644"
-  delegate_to: localhost
-  become: false
-  run_once: true
-  when: kibana_stack_version_missing
-  vars:
-    kibana_stack_version_missing: >-
-      {{
-        kibana_installed_version.rc != 0 or
-        elastic_stack_version not in kibana_installed_version.stdout
-      }}
-
-- name: Copy verified Kibana package to target
-  ansible.builtin.copy:
-    src: >-
-      {{ playbook_dir }}/../.cache/elastic/kibana-{{
-      elastic_stack_version }}-amd64.deb
     dest: "{{ kibana_deb_path }}"
+    checksum: "sha512:{{ kibana_deb_url }}.sha512"
     mode: "0644"
   when: kibana_stack_version_missing
   vars:
     kibana_stack_version_missing: >-
-      {{
-        kibana_installed_version.rc != 0 or
-        elastic_stack_version not in kibana_installed_version.stdout
-      }}
+      {{ kibana_installed_version.rc != 0 or
+         elastic_stack_version not in kibana_installed_version.stdout }}
 
 - name: Install requested Kibana version
   ansible.builtin.apt:

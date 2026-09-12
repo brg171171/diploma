@@ -1,0 +1,18 @@
+# Managed by Ansible. Local changes will be overwritten.
+cluster.name: "{{ elasticsearch_cluster_name }}"
+node.name: "{{ elasticsearch_node_name }}"
+
+path.data: /var/lib/elasticsearch
+path.logs: /var/log/elasticsearch
+
+network.host: "{{ elasticsearch_bind_host }}"
+http.port: {{ elasticsearch_port }}
+
+discovery.type: single-node
+
+xpack.security.enabled: true
+xpack.security.enrollment.enabled: false
+xpack.security.http.ssl.enabled: false
+xpack.security.transport.ssl.enabled: false
+
+action.destructive_requires_name: true

@@ -1,0 +1,102 @@
+---
+- name: Verify Elasticsearch
+  hosts: elasticsearch
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Read Elasticsearch service state
+      ansible.builtin.command: systemctl is-active elasticsearch
+      register: elasticsearch_service_state
+      changed_when: false
+
+    - name: Query Elasticsearch cluster health
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:{{ elasticsearch_port | default(9200) }}/_cluster/health"
+        method: GET
+        user: elastic
+        password: "{{ vault_elasticsearch_password }}"
+        force_basic_auth: true
+        return_content: true
+        status_code: 200
+      register: elasticsearch_health
+      no_log: true
+
+    - name: Confirm Elasticsearch is operational
+      ansible.builtin.assert:
+        that:
+          - elasticsearch_service_state.stdout == "active"
+          - elasticsearch_health.json.status in ["green", "yellow"]
+        success_msg: >-
+          Elasticsearch is active; cluster status is
+          {{ elasticsearch_health.json.status }}.
+
+- name: Verify Kibana
+  hosts: kibana
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Read Kibana service state
+      ansible.builtin.command: systemctl is-active kibana
+      register: kibana_service_state
+      changed_when: false
+
+    - name: Query Kibana status API
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:{{ kibana_port | default(5601) }}/api/status"
+        method: GET
+        user: elastic
+        password: "{{ vault_elasticsearch_password }}"
+        force_basic_auth: true
+        return_content: true
+        status_code: 200
+      register: kibana_status
+      no_log: true
+
+    - name: Confirm Kibana is operational
+      ansible.builtin.assert:
+        that:
+          - kibana_service_state.stdout == "active"
+          - kibana_status.status == 200
+        success_msg: Kibana is active and its API returns HTTP 200.
+
+- name: Verify Filebeat
+  hosts: web
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Read Filebeat service state
+      ansible.builtin.command: systemctl is-active filebeat
+      register: filebeat_service_state
+      changed_when: false
+
+    - name: Validate Filebeat configuration
+      ansible.builtin.command:
+        argv:
+          - /usr/bin/filebeat
+          - test
+          - config
+          - -c
+          - /etc/filebeat/filebeat.yml
+      register: filebeat_config_test
+      changed_when: false
+      no_log: true
+
+    - name: Test Filebeat output
+      ansible.builtin.command:
+        argv:
+          - /usr/bin/filebeat
+          - test
+          - output
+          - -c
+          - /etc/filebeat/filebeat.yml
+      register: filebeat_output_test
+      changed_when: false
+      no_log: true
+
+    - name: Confirm Filebeat is operational
+      ansible.builtin.assert:
+        that:
+          - filebeat_service_state.stdout == "active"
+          - filebeat_config_test.rc == 0
+          - filebeat_output_test.rc == 0
+        success_msg: "Filebeat is active and connected on {{ inventory_hostname }}."

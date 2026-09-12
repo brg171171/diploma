@@ -97,7 +97,6 @@ write_files:
         --checkout "$REVISION" \
         --directory "$REPO_DIR" \
         --inventory "localhost," \
-        --extra-vars @/etc/diploma/ansible-pull-vars.yml \
         ansible/playbooks/web-pull.yml
 
   - path: /etc/systemd/system/diploma-ansible-pull.service
@@ -134,17 +133,6 @@ write_files:
 
       [Install]
       WantedBy=timers.target
-
-  - path: /etc/diploma/ansible-pull-vars.yml
-    owner: root:root
-    permissions: "0600"
-    content: |
-      elasticsearch_host: ${elasticsearch_host_yaml}
-      elasticsearch_port: ${elasticsearch_port_yaml}
-      filebeat_credentials_source: "lockbox"
-      filebeat_lockbox_secret_id: ${filebeat_lockbox_secret_id_yaml}
-      filebeat_lockbox_secret_key: "password"
-      filebeat_manage_assets: false
 
 runcmd:
   - [nginx, -t]

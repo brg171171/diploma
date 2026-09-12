@@ -1,1 +1,7 @@
 ---
+- name: Restart Kibana
+  ansible.builtin.systemd_service:
+    name: kibana
+    state: restarted
+    enabled: true
+    daemon_reload: true
