@@ -154,4 +154,113 @@ groups:
             Filesystem {% raw %}{{ $labels.mountpoint }}{% endraw %}
             на {% raw %}{{ $labels.instance }}{% endraw %}
             доступна только для чтения.
+  - name: nginx-alerts
+    interval: 30s
+    rules:
+      - alert: NginxLogExporterDown
+        expr: up{job="nginxlog_exporter"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          environment: diploma
+          service: web
+        annotations:
+          summary: "Nginx log exporter недоступен"
+          description: >-
+            Prometheus не может получить Nginx-метрики с
+            {% raw %}{{ $labels.instance }}{% endraw %}
+            в течение двух минут.
 
+      - alert: NginxHigh4xxRate
+        expr: |
+          (
+            100 *
+            sum by (instance) (
+              rate(
+                nginx_http_response_count_total{
+                  job="nginxlog_exporter",
+                  status=~"4.."
+                }[5m]
+              )
+            )
+            /
+            clamp_min(
+              sum by (instance) (
+                rate(
+                  nginx_http_response_count_total{
+                    job="nginxlog_exporter"
+                  }[5m]
+                )
+              ),
+              0.001
+            )
+          ) > 5
+          and on (instance)
+          sum by (instance) (
+            increase(
+              nginx_http_response_count_total{
+                job="nginxlog_exporter"
+              }[5m]
+            )
+          ) > 20
+        for: 5m
+        labels:
+          severity: warning
+          environment: diploma
+          service: web
+        annotations:
+          summary: "Высокая доля HTTP 4xx"
+          description: >-
+            Доля HTTP 4xx на
+            {% raw %}{{ $labels.instance }}{% endraw %}
+            превышает 5% при наличии не менее 20 запросов
+            за последние пять минут.
+            Текущее значение:
+            {% raw %}{{ printf "%.2f" $value }}{% endraw %}%.
+
+      - alert: Nginx5xxDetected
+        expr: |
+          sum by (instance) (
+            increase(
+              nginx_http_response_count_total{
+                job="nginxlog_exporter",
+                status=~"5.."
+              }[5m]
+            )
+          ) > 0
+        for: 1m
+        labels:
+          severity: critical
+          environment: diploma
+          service: web
+        annotations:
+          summary: "Обнаружены HTTP 5xx"
+          description: >-
+            На {% raw %}{{ $labels.instance }}{% endraw %}
+            обнаружены ответы HTTP 5xx.
+            Количество за последние пять минут:
+            {% raw %}{{ printf "%.0f" $value }}{% endraw %}.
+
+      - alert: NginxHigh4xxAbsoluteRate
+        expr: |
+          sum by (instance) (
+            rate(
+              nginx_http_response_count_total{
+                job="nginxlog_exporter",
+                status=~"4.."
+              }[5m]
+            )
+          ) > 1
+        for: 10m
+        labels:
+          severity: warning
+          environment: diploma
+          service: web
+        annotations:
+          summary: "Высокая частота HTTP 4xx"
+          description: >-
+            На {% raw %}{{ $labels.instance }}{% endraw %}
+            частота HTTP 4xx превышает один ответ в секунду.
+            Текущее значение:
+            {% raw %}{{ printf "%.2f" $value }}{% endraw %}
+            ответа в секунду.

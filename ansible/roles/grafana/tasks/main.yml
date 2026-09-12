@@ -1,4 +1,45 @@
 ---
+- name: Validate Grafana SMTP and Alerting variables
+  ansible.builtin.assert:
+    that:
+      - grafana_smtp_enabled is defined
+      - grafana_smtp_host is defined
+      - grafana_smtp_user is defined
+      - grafana_smtp_from_address is defined
+      - grafana_alert_email_to is defined
+      - vault_alertmanager_smtp_app_password is defined
+      - vault_alertmanager_smtp_app_password | length == 16
+    fail_msg: >-
+      Grafana SMTP variables or Gmail application password are missing.
+    quiet: true
+  no_log: true
+
+- name: Create Grafana Alerting provisioning directory
+  ansible.builtin.file:
+    path: /etc/grafana/provisioning/alerting
+    state: directory
+    owner: root
+    group: grafana
+    mode: "0750"
+
+- name: Provision Grafana email contact point
+  ansible.builtin.template:
+    src: provisioning/alerting/contact-points.yml.j2
+    dest: /etc/grafana/provisioning/alerting/contact-points.yml
+    owner: root
+    group: grafana
+    mode: "0640"
+  notify: Restart Grafana
+
+- name: Provision Grafana notification policies
+  ansible.builtin.template:
+    src: provisioning/alerting/notification-policies.yml.j2
+    dest: /etc/grafana/provisioning/alerting/notification-policies.yml
+    owner: root
+    group: grafana
+    mode: "0640"
+  notify: Restart Grafana
+
 - name: Validate required Grafana variables
   ansible.builtin.assert:
     that:

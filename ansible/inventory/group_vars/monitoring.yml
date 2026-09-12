@@ -9,3 +9,10 @@ alertmanager_group_interval: "1m"
 alertmanager_repeat_interval_default: "12h"
 alertmanager_repeat_interval_warning: "4h"
 alertmanager_repeat_interval_critical: "30m"
+
+grafana_smtp_enabled: true
+grafana_smtp_host: "smtp.gmail.com:587"
+grafana_smtp_user: "b.r.gorelik@gmail.com"
+grafana_smtp_from_address: "b.r.gorelik@gmail.com"
+grafana_smtp_from_name: "Diploma Grafana"
+grafana_alert_email_to: "it.profopinion@gmail.com"

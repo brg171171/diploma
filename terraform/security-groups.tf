@@ -166,13 +166,6 @@ resource "yandex_vpc_security_group" "grafana" {
     v4_cidr_blocks = local.effective_viewer_cidrs
   }
 
-  ingress {
-    description       = "Node Exporter from Prometheus"
-    protocol          = "TCP"
-    port              = 9100
-    security_group_id = yandex_vpc_security_group.prometheus.id
-  }
-
   egress {
     description    = "Prometheus access, updates and log delivery"
     protocol       = "ANY"
@@ -296,4 +289,31 @@ resource "yandex_vpc_security_group" "postgresql" {
     protocol       = "ANY"
     v4_cidr_blocks = ["0.0.0.0/0"]
   }
+}
+
+#
+# Межгрупповые правила Grafana -> Prometheus
+#
+# Правила вынесены в отдельные ресурсы, чтобы избежать циклической
+# зависимости между security groups Grafana и Prometheus.
+#
+
+resource "yandex_vpc_security_group_rule" "prometheus_from_grafana" {
+  security_group_binding = yandex_vpc_security_group.prometheus.id
+
+  direction         = "ingress"
+  description       = "Prometheus API from Grafana"
+  protocol          = "TCP"
+  port              = 9090
+  security_group_id = yandex_vpc_security_group.grafana.id
+}
+
+resource "yandex_vpc_security_group_rule" "alertmanager_from_grafana" {
+  security_group_binding = yandex_vpc_security_group.prometheus.id
+
+  direction         = "ingress"
+  description       = "Alertmanager API from Grafana"
+  protocol          = "TCP"
+  port              = 9093
+  security_group_id = yandex_vpc_security_group.grafana.id
 }
